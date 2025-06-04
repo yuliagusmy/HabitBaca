@@ -1,5 +1,4 @@
 import {
-    Award,
     BarChart2,
     BookOpen,
     LayoutDashboard,
@@ -40,15 +39,6 @@ const BottomNavbar = () => {
       >
         <BarChart2 className="h-6 w-6 mb-1" />
         <span className="text-xs">Stats</span>
-      </NavLink>
-      <NavLink
-        to="/achievements"
-        className={({ isActive }) =>
-          `flex flex-col items-center flex-1 py-2 ${isActive ? 'text-primary-600' : 'text-gray-500'}`
-        }
-      >
-        <Award className="h-6 w-6 mb-1" />
-        <span className="text-xs">Badges</span>
       </NavLink>
       <NavLink
         to="/profile"

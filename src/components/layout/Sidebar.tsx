@@ -1,17 +1,16 @@
 import {
-    Award,
-    BarChart2,
-    BookOpen,
-    LayoutDashboard,
-    LogOut,
-    User
+  BarChart2,
+  BookOpen,
+  LayoutDashboard,
+  LogOut,
+  User
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import UserLevel from '../features/UserLevel';
 
 const Sidebar = () => {
-  const { signOut, profile } = useAuth();
+  const { signOut, profile, user } = useAuth();
 
   return (
     <div className="h-full flex flex-col bg-white border-r border-gray-200">
@@ -27,12 +26,12 @@ const Sidebar = () => {
       </div>
 
       {/* User level summary */}
-      <div className="p-4 border-b border-gray-200">
-        <UserLevel profile={profile} />
+      <div className="px-6 py-4 border-b border-gray-200">
+        <UserLevel profile={profile} user={user} variant="sidebar" username={profile?.username} />
       </div>
 
       {/* Navigation links */}
-      <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-6 py-4 space-y-1 overflow-y-auto">
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -73,20 +72,6 @@ const Sidebar = () => {
         >
           <BarChart2 className="mr-3 h-5 w-5" />
           Statistics
-        </NavLink>
-
-        <NavLink
-          to="/achievements"
-          className={({ isActive }) =>
-            `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              isActive
-                ? 'bg-primary-50 text-primary-700'
-                : 'text-gray-600 hover:bg-gray-50'
-            }`
-          }
-        >
-          <Award className="mr-3 h-5 w-5" />
-          Achievements
         </NavLink>
 
         <NavLink

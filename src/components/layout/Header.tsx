@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import AddReadingModal from '../features/books/AddReadingModal';
 
 const Header = () => {
-  const { signOut, profile } = useAuth();
+  const { signOut } = useAuth();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const location = useLocation();
 
@@ -16,7 +16,6 @@ const Header = () => {
     if (path === '/books') return 'My Books';
     if (path.startsWith('/books/')) return 'Book Details';
     if (path === '/stats') return 'Statistics';
-    if (path === '/achievements') return 'Achievements';
     if (path === '/profile') return 'Profile';
     return 'HabitBaca';
   };
@@ -44,21 +43,6 @@ const Header = () => {
               <PlusSquare className="mr-2 h-5 w-5" />
               <span className="hidden sm:block">Add Reading</span>
             </button>
-
-            {/* User info */}
-            <div className="ml-4 flex items-center">
-              <div className="hidden md:flex flex-col items-end">
-                <span className="text-sm font-medium text-gray-700">
-                  {profile?.username || 'User'}
-                </span>
-                <span className="text-xs text-gray-500">
-                  Level {profile?.level || 1}
-                </span>
-              </div>
-              <div className="ml-3 h-8 w-8 rounded-full bg-gradient-to-r from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold">
-                {profile?.username?.[0]?.toUpperCase() || 'U'}
-              </div>
-            </div>
           </div>
         </div>
       </div>

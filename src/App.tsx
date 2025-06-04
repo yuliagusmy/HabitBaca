@@ -1,26 +1,25 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 
-import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/layout/Layout';
-import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
-import BooksPage from './pages/BooksPage';
-import BookDetailPage from './pages/BookDetailPage';
-import StatsPage from './pages/StatsPage';
-import AchievementsPage from './pages/AchievementsPage';
-import ProfilePage from './pages/ProfilePage';
 import LoadingScreen from './components/ui/LoadingScreen';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import BookDetailPage from './pages/BookDetailPage';
+import BooksPage from './pages/BooksPage';
+import DashboardPage from './pages/DashboardPage';
+import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
+import StatsPage from './pages/StatsPage';
 
 // Protected route component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return <LoadingScreen />;
   }
-  
+
   return user ? <>{children}</> : <Navigate to="/login" />;
 };
 
@@ -28,7 +27,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Toaster 
+        <Toaster
           position="top-right"
           toastOptions={{
             duration: 3000,
@@ -43,9 +42,9 @@ function App() {
         />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          
-          <Route 
-            path="/" 
+
+          <Route
+            path="/"
             element={
               <ProtectedRoute>
                 <Layout />
@@ -56,10 +55,9 @@ function App() {
             <Route path="books" element={<BooksPage />} />
             <Route path="books/:id" element={<BookDetailPage />} />
             <Route path="stats" element={<StatsPage />} />
-            <Route path="achievements" element={<AchievementsPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
-          
+
           <Route path="*" element={<Navigate to="/\" replace />} />
         </Routes>
       </Router>

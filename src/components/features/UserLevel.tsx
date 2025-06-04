@@ -1,12 +1,16 @@
+import { User } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
 import React from 'react';
 import { UserProfile } from '../../types/supabase';
 
 interface UserLevelProps {
   profile: UserProfile | null;
+  user?: User | null;
+  variant?: 'sidebar' | 'profile';
+  username?: string;
 }
 
-const getLevelInfo = (totalXP: number) => {
+export const getLevelInfo = (totalXP: number) => {
   // Leveling rules from user
   const levelThresholds = [
     // [level, xp needed for this level, xp increment]
@@ -55,14 +59,14 @@ const getLevelInfo = (totalXP: number) => {
   };
 };
 
-const UserLevel: React.FC<UserLevelProps> = ({ profile }) => {
+const UserLevel: React.FC<UserLevelProps> = ({ profile, user, variant = 'profile', username }) => {
   if (!profile) return null;
 
   // Calculate level and XP info
-  const { level, currentXP, xpToNext, totalXP } = getLevelInfo(profile.xp);
+  const { level, currentXP, xpToNext } = getLevelInfo(profile.xp);
   const progressPercent = Math.min(100, Math.round((currentXP / xpToNext) * 100));
 
-  // Determine user title based on level range
+  // User title for sidebar
   const getUserTitle = (level: number) => {
     if (level <= 5) return 'Pustakawan Pemula';
     if (level <= 10) return 'Penjelajah Halaman';
@@ -76,19 +80,54 @@ const UserLevel: React.FC<UserLevelProps> = ({ profile }) => {
     return 'Legenda Literasi';
   };
 
-  const userTitle = getUserTitle(level);
+  if (variant === 'sidebar') {
+    return (
+      <div className="bg-white rounded-2xl shadow-md px-6 py-5 flex flex-col items-center space-y-2">
+        {/* Avatar */}
+        <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-primary-400 to-primary-600 flex items-center justify-center text-white text-2xl font-bold shadow mb-1">
+          {user && user.user_metadata && user.user_metadata.picture ? (
+            <img src={user.user_metadata.picture} alt={profile.username} className="w-full h-full rounded-full object-cover" />
+          ) : (
+            (profile.username?.[0] || '?').toUpperCase()
+          )}
+        </div>
+        {/* Username */}
+        <div className="text-primary-900 font-semibold text-base truncate">{username}</div>
+        {/* Level badge */}
+        <span className="text-xs font-bold text-primary-700 bg-primary-50 rounded-full px-3 py-0.5">
+          Lvl {level}
+        </span>
+        {/* Title */}
+        <div className="text-sm font-bold text-primary-800 mt-1 mb-1">{getUserTitle(level)}</div>
+        {/* XP Bar */}
+        <div className="w-full">
+          <div className="relative h-2 rounded-full bg-gray-200 overflow-hidden">
+            <motion.div
+              className="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-primary-400 to-orange-400 transition-all duration-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              transition={{ duration: 1, ease: 'easeOut' }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-gray-500 font-semibold mt-1">
+            <span>{currentXP} XP</span>
+            <span>{xpToNext} XP</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+  // Default (profile variant)
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-700">{profile.username}</h3>
         <span className="text-xs font-medium text-primary-700 bg-primary-50 rounded-full px-2 py-0.5">
           Lvl {level}
         </span>
       </div>
-      <div className="text-xs text-gray-500 mb-1">{userTitle}</div>
       {/* XP bar */}
-      <div className="xp-bar-container">
+      <div className="xp-bar-container mb-1">
         <motion.div
           className="xp-bar-progress"
           initial={{ width: 0 }}
@@ -96,18 +135,10 @@ const UserLevel: React.FC<UserLevelProps> = ({ profile }) => {
           transition={{ duration: 1, ease: "easeOut" }}
         ></motion.div>
       </div>
-      <div className="flex justify-between text-xs text-gray-500">
+      <div className="flex justify-between text-xs text-gray-200">
         <span>{currentXP} XP</span>
         <span>{xpToNext} XP</span>
       </div>
-      <div className="text-xs text-gray-400 text-left">Total XP: {profile.xp}</div>
-      {/* Streak indicator */}
-      {profile.streak > 0 && (
-        <div className="flex items-center text-xs text-orange-600 mt-1">
-          <span className="mr-1">🔥</span>
-          <span>{profile.streak} day streak</span>
-        </div>
-      )}
     </div>
   );
 };

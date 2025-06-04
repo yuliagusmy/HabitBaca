@@ -1,49 +1,70 @@
-import React, { useState, useEffect } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, getMonth, getYear } from 'date-fns';
-import { supabase } from '../../lib/supabase';
+import { addYears, endOfYear, format, getDay, getMonth, getYear, startOfWeek, startOfYear, subYears } from 'date-fns';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const ReadingCalendar = () => {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [readingData, setReadingData] = useState<{[key: string]: number}>({});
   const [isLoading, setIsLoading] = useState(true);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
+  const todayCellRef = useRef<HTMLDivElement>(null);
 
-  // Get days in current month
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  // Tahun yang sedang ditampilkan
+  const currentYear = getYear(currentDate);
 
-  // Previous and next month navigation
-  const prevMonth = () => {
-    setCurrentDate(new Date(getYear(currentDate), getMonth(currentDate) - 1, 1));
-  };
+  // Hitung grid untuk satu tahun penuh
+  const { yearStart, yearEnd, weeks } = useMemo(() => {
+    const start = startOfYear(new Date(currentYear, 0, 1));
+    const end = endOfYear(new Date(currentYear, 0, 1));
+    // Mulai dari minggu pertama (Minggu sebelum 1 Jan)
+    const firstDay = startOfWeek(start, { weekStartsOn: 0 });
+    // Hitung semua hari dalam grid
+    const days: Date[] = [];
+    let d = new Date(firstDay);
+    while (d <= end || getDay(d) !== 0) {
+      days.push(new Date(d));
+      d.setDate(d.getDate() + 1);
+    }
+    // Kelompokkan per minggu
+    const weeks: Date[][] = [];
+    for (let i = 0; i < days.length; i += 7) {
+      weeks.push(days.slice(i, i + 7));
+    }
+    return { yearStart: start, yearEnd: end, weeks };
+  }, [currentYear]);
 
-  const nextMonth = () => {
-    setCurrentDate(new Date(getYear(currentDate), getMonth(currentDate) + 1, 1));
-  };
+  // Navigasi tahun
+  const prevYear = useCallback(() => {
+    setCurrentDate(subYears(currentDate, 1));
+  }, [currentDate]);
+  const nextYear = useCallback(() => {
+    const next = addYears(currentDate, 1);
+    if (next <= new Date()) {
+      setCurrentDate(next);
+    }
+  }, [currentDate]);
 
-  // Fetch reading data for the month
+  // Ambil data satu tahun penuh
   useEffect(() => {
     const fetchReadingData = async () => {
       if (!user) return;
-      
       setIsLoading(true);
       try {
-        const startDate = format(monthStart, 'yyyy-MM-dd');
-        const endDate = format(monthEnd, 'yyyy-MM-dd');
-        
+        const startDate = format(yearStart, 'yyyy-MM-dd');
+        const endDate = format(yearEnd, 'yyyy-MM-dd');
         const { data, error } = await supabase
           .from('reading_sessions')
           .select('date, pages_read')
           .eq('user_id', user.id)
           .gte('date', startDate)
           .lte('date', endDate);
-        
         if (error) throw error;
-        
-        // Process data into a date -> pages read map
         const dateMap: {[key: string]: number} = {};
         data?.forEach(session => {
           const date = session.date;
@@ -53,7 +74,6 @@ const ReadingCalendar = () => {
             dateMap[date] = session.pages_read;
           }
         });
-        
         setReadingData(dateMap);
       } catch (error) {
         console.error('Error fetching reading data:', error);
@@ -61,118 +81,153 @@ const ReadingCalendar = () => {
         setIsLoading(false);
       }
     };
-
     fetchReadingData();
-  }, [user, monthStart, monthEnd]);
+  }, [user, yearStart, yearEnd]);
 
-  // Get cell color based on pages read
-  const getCellColor = (date: Date) => {
+  // Warna cell
+  const getCellColor = useCallback((date: Date) => {
     const dateString = format(date, 'yyyy-MM-dd');
     const pagesRead = readingData[dateString] || 0;
-    
-    if (pagesRead === 0) return 'bg-gray-200';
-    if (pagesRead < 10) return 'bg-success-200';
-    if (pagesRead < 15) return 'bg-success-300';
-    if (pagesRead < 20) return 'bg-success-400';
-    return 'bg-success-500';
-  };
+    if (pagesRead === 0) return 'bg-white border border-gray-200';
+    if (pagesRead < 10) return 'bg-green-100';
+    if (pagesRead < 15) return 'bg-green-300';
+    if (pagesRead < 20) return 'bg-green-500';
+    return 'bg-green-700';
+  }, [readingData]);
+
+  // Cell kalender
+  const CalendarCell = useCallback(({ day }: { day: Date }) => {
+    const dateString = format(day, 'yyyy-MM-dd');
+    const pagesRead = readingData[dateString] || 0;
+    const isCurrentYear = getYear(day) === currentYear;
+    const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+    return (
+      <div
+        key={dateString}
+        ref={isToday ? todayCellRef : undefined}
+        className={`group w-7 h-7 sm:w-8 sm:h-8 rounded-[3px] flex items-center justify-center ${getCellColor(day)} ${isCurrentYear ? '' : 'opacity-30'} ${isToday ? 'ring-2 ring-blue-400' : ''}`}
+        title={`${format(day, 'MMM d')}: ${pagesRead} pages`}
+      >
+        <div className="absolute z-10 hidden group-hover:block">
+          <div className="bg-gray-800 text-white text-[12px] rounded py-1 px-2 whitespace-nowrap">
+            {format(day, 'MMM d')}: {pagesRead} pages
+          </div>
+        </div>
+      </div>
+    );
+  }, [readingData, getCellColor, currentYear]);
+
+  // Label bulan (posisi minggu pertama bulan tsb)
+  const monthLabels = useMemo(() => {
+    const labels: { month: string, col: number }[] = [];
+    let lastMonth: number | null = null;
+    weeks.forEach((week, colIdx) => {
+      const firstDay = week[0];
+      const m = getMonth(firstDay);
+      if (m !== lastMonth) {
+        labels.push({ month: MONTHS[m], col: colIdx });
+        lastMonth = m;
+      }
+    });
+    return labels;
+  }, [weeks]);
+
+  // Scroll ke cell hari ini setelah render (jika tahun sekarang)
+  useEffect(() => {
+    if (!isLoading && getYear(new Date()) === currentYear && todayCellRef.current && gridContainerRef.current) {
+      todayCellRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [isLoading, currentYear]);
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">Reading Calendar</h2>
-        <div className="flex items-center space-x-2">
+    <div className="bg-white rounded-lg shadow-sm p-2">
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-xs font-semibold text-gray-800">Reading Calendar</h2>
+        <div className="flex items-center space-x-1">
           <button
-            onClick={prevMonth}
-            className="p-1 rounded-full hover:bg-gray-100"
-            aria-label="Previous month"
+            onClick={prevYear}
+            className="p-0.5 rounded-full hover:bg-gray-100"
+            aria-label="Previous year"
           >
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+            <ChevronLeft className="w-4 h-4 text-gray-600" />
           </button>
-          <h3 className="text-sm font-medium text-gray-700">
-            {format(currentDate, 'MMMM yyyy')}
+          <h3 className="text-xs font-medium text-gray-700">
+            {currentYear}
           </h3>
           <button
-            onClick={nextMonth}
-            className="p-1 rounded-full hover:bg-gray-100"
-            aria-label="Next month"
+            onClick={nextYear}
+            className="p-0.5 rounded-full hover:bg-gray-100"
+            aria-label="Next year"
+            disabled={addYears(currentDate, 1) > new Date()}
           >
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+            <ChevronRight className="w-4 h-4 text-gray-600" />
           </button>
         </div>
       </div>
-      
-      {/* Calendar grid */}
       {isLoading ? (
-        <div className="flex justify-center items-center h-40">
+        <div className="flex justify-center items-center h-24">
           <div className="loading-spinner"></div>
         </div>
       ) : (
-        <>
-          {/* Day labels */}
-          <div className="grid grid-cols-7 gap-1 mb-1">
-            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => (
-              <div key={day} className="text-xs font-medium text-gray-500 text-center">
-                {day}
+        <div className="overflow-x-auto" ref={gridContainerRef}>
+          {/* Label bulan */}
+          <div className="flex ml-12 mb-2">
+            {monthLabels.map(({ month, col }, idx) => (
+              <div
+                key={month}
+                style={{ marginLeft: idx === 0 ? 0 : `${(col - monthLabels[idx - 1].col) * 32}px` }}
+                className="text-sm font-medium text-gray-500"
+              >
+                {month}
               </div>
             ))}
           </div>
-          
-          {/* Calendar cells */}
-          <div className="grid grid-cols-7 gap-1">
-            {days.map((day) => {
-              const dateString = format(day, 'yyyy-MM-dd');
-              const pagesRead = readingData[dateString] || 0;
-              
-              return (
-                <div 
-                  key={dateString}
-                  className="relative group"
-                >
-                  <div 
-                    className={`calendar-cell ${getCellColor(day)}`}
-                    title={`${format(day, 'MMM d')}: ${pagesRead} pages`}
-                  ></div>
-                  
-                  {/* Tooltip on hover */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 hidden group-hover:block z-10">
-                    <div className="bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
-                      {format(day, 'MMM d')}: {pagesRead} pages
-                    </div>
-                  </div>
+          <div className="flex">
+            {/* Label hari */}
+            <div className="flex flex-col mr-2">
+              {DAYS.map((day, i) => (
+                (i % 2 === 1) ? (
+                  <div key={day} className="h-7 sm:h-8 text-[12px] text-gray-400 flex items-center justify-end pr-2" style={{ height: '32px' }}>{day[0]}</div>
+                ) : (
+                  <div key={day} className="h-7 sm:h-8" style={{ height: '32px' }}></div>
+                )
+              ))}
+            </div>
+            {/* Grid kalender */}
+            <div className="flex">
+              {weeks.map((week, colIdx) => (
+                <div key={colIdx} className="flex flex-col">
+                  {week.map((day, rowIdx) => (
+                    <CalendarCell key={rowIdx} day={day} />
+                  ))}
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-          
           {/* Legend */}
-          <div className="mt-4 flex items-center justify-between text-xs text-gray-600">
+          <div className="mt-4 flex items-center space-x-3 text-[12px] text-gray-600">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gray-200 rounded-sm"></div>
-              <span>0 pages</span>
+              <div className="w-7 h-7 border border-gray-200 bg-white rounded-[3px]"></div>
+              <span>0</span>
             </div>
-            
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-success-200 rounded-sm"></div>
-              <span>1-9 pages</span>
+              <div className="w-7 h-7 bg-green-100 rounded-[3px]"></div>
+              <span>1-9</span>
             </div>
-            
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-success-300 rounded-sm"></div>
-              <span>10-14 pages</span>
+              <div className="w-7 h-7 bg-green-300 rounded-[3px]"></div>
+              <span>10-14</span>
             </div>
-            
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-success-400 rounded-sm"></div>
-              <span>15-19 pages</span>
+              <div className="w-7 h-7 bg-green-500 rounded-[3px]"></div>
+              <span>15-19</span>
             </div>
-            
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-success-500 rounded-sm"></div>
-              <span>20+ pages</span>
+              <div className="w-7 h-7 bg-green-700 rounded-[3px]"></div>
+              <span>20+</span>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

@@ -270,209 +270,239 @@ const BookDetailPage: React.FC = () => {
       {/* Book details section */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         {/* Book header */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white relative">
-          {!isEditing && (
-            <div className="absolute top-6 right-6 flex space-x-2">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-colors"
-                title="Edit book"
-              >
-                <Edit className="h-5 w-5 text-white" />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-colors"
-                title="Delete book"
-              >
-                <Trash2 className="h-5 w-5 text-white" />
-              </button>
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white rounded-t-xl">
+          <div className="flex flex-row items-center">
+            {/* Book cover kiri */}
+            <div className="flex-shrink-0 mr-4 md:mr-8 mb-0">
+              {isEditing ? (
+                formData.cover_url ? (
+                  <img
+                    src={formData.cover_url}
+                    alt={formData.title || 'Book cover'}
+                    className="h-36 w-24 md:h-56 md:w-40 object-cover rounded-xl shadow-lg bg-white border-2 border-white"
+                  />
+                ) : (
+                  <div className="h-36 w-24 md:h-56 md:w-40 flex items-center justify-center bg-gray-100 rounded-xl shadow-lg border-2 border-white">
+                    <BookOpen className="h-16 w-16 md:h-20 md:w-20 text-gray-300" />
+                  </div>
+                )
+              ) : (
+                book.cover_url ? (
+                  <img
+                    src={book.cover_url}
+                    alt={book.title}
+                    className="h-36 w-24 md:h-56 md:w-40 object-cover rounded-xl shadow-lg bg-white border-2 border-white"
+                  />
+                ) : (
+                  <div className="h-36 w-24 md:h-56 md:w-40 flex items-center justify-center bg-gray-100 rounded-xl shadow-lg border-2 border-white">
+                    <BookOpen className="h-16 w-16 md:h-20 md:w-20 text-gray-300" />
+                  </div>
+                )
+              )}
             </div>
-          )}
-
-          {isEditing ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title || ''}
-                    onChange={handleFormChange}
-                    className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">
-                    Author
-                  </label>
-                  <input
-                    type="text"
-                    name="author"
-                    value={formData.author || ''}
-                    onChange={handleFormChange}
-                    className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">
-                    Genre
-                  </label>
-                  <input
-                    type="text"
-                    name="genre"
-                    value={formData.genre || ''}
-                    onChange={handleFormChange}
-                    className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status || 'wishlist'}
-                    onChange={handleFormChange}
-                    className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
-                    required
+            {/* Info buku kanan */}
+            <div className="flex-1 w-full min-w-0">
+              {!isEditing && (
+                <div className="flex justify-end space-x-1 md:space-x-2 mb-2">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="p-1 md:p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-colors"
+                    title="Edit book"
                   >
-                    <option value="wishlist">Wishlist</option>
-                    <option value="reading">Reading</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">
-                    Total Pages
-                  </label>
-                  <input
-                    type="number"
-                    name="total_pages"
-                    value={formData.total_pages || 0}
-                    onChange={handleFormChange}
-                    min="1"
-                    className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white mb-1">
-                    Current Page
-                  </label>
-                  <input
-                    type="number"
-                    name="current_page"
-                    value={formData.current_page || 0}
-                    onChange={handleFormChange}
-                    min="0"
-                    max={formData.total_pages || 1000}
-                    className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
-                    required
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-white mb-1">
-                    Cover URL (optional)
-                  </label>
-                  <input
-                    type="text"
-                    name="cover_url"
-                    value={formData.cover_url || ''}
-                    onChange={handleFormChange}
-                    placeholder="https://example.com/book-cover.jpg"
-                    className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors"
-                  disabled={isLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-white rounded-lg text-primary-600 font-medium hover:bg-gray-100 transition-colors"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="loading-spinner mr-2 w-4 h-4 border-primary-600"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    'Save Changes'
-                  )}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <>
-              <h1 className="text-2xl font-bold mb-2">{book.title}</h1>
-              <p className="text-white text-opacity-90 mb-4">by {book.author}</p>
-
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <span className="badge bg-white bg-opacity-20 text-white">
-                  {book.genre}
-                </span>
-                {book.status === 'reading' && (
-                  <span className="badge bg-blue-500 text-white">
-                    Reading
-                  </span>
-                )}
-                {book.status === 'completed' && (
-                  <span className="badge bg-green-500 text-white">
-                    Completed
-                  </span>
-                )}
-                {book.status === 'wishlist' && (
-                  <span className="badge bg-yellow-500 text-white">
-                    Wishlist
-                  </span>
-                )}
-              </div>
-
-              <div className="text-sm text-white text-opacity-90">
-                <div className="flex items-center gap-1">
-                  <BookText className="h-4 w-4 mr-1" />
-                  {book.current_page} / {book.total_pages} pages
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              {book.status === 'reading' && (
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs text-white text-opacity-90 mb-1">
-                    <span>Progress</span>
-                    <span>{Math.round((book.current_page / book.total_pages) * 100)}%</span>
-                  </div>
-                  <div className="h-2 bg-white bg-opacity-20 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-white"
-                      style={{ width: `${(book.current_page / book.total_pages) * 100}%` }}
-                    ></div>
-                  </div>
+                    <Edit className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="p-1 md:p-2 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30 transition-colors"
+                    title="Delete book"
+                  >
+                    <Trash2 className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                  </button>
                 </div>
               )}
-            </>
-          )}
+              {isEditing ? (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Form fields, tanpa cover image di sini */}
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={formData.title || ''}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Author
+                      </label>
+                      <input
+                        type="text"
+                        name="author"
+                        value={formData.author || ''}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Genre
+                      </label>
+                      <input
+                        type="text"
+                        name="genre"
+                        value={formData.genre || ''}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Status
+                      </label>
+                      <select
+                        name="status"
+                        value={formData.status || 'wishlist'}
+                        onChange={handleFormChange}
+                        className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
+                        required
+                      >
+                        <option value="wishlist">Wishlist</option>
+                        <option value="reading">Reading</option>
+                        <option value="completed">Completed</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Total Pages
+                      </label>
+                      <input
+                        type="number"
+                        name="total_pages"
+                        value={formData.total_pages || 0}
+                        onChange={handleFormChange}
+                        min="1"
+                        className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Current Page
+                      </label>
+                      <input
+                        type="number"
+                        name="current_page"
+                        value={formData.current_page || 0}
+                        onChange={handleFormChange}
+                        min="0"
+                        max={formData.total_pages || 1000}
+                        className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
+                        required
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Cover URL (optional)
+                      </label>
+                      <input
+                        type="text"
+                        name="cover_url"
+                        value={formData.cover_url || ''}
+                        onChange={handleFormChange}
+                        placeholder="https://example.com/book-cover.jpg"
+                        className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 bg-white bg-opacity-20 rounded-lg hover:bg-opacity-30 transition-colors"
+                      disabled={isLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-white rounded-lg text-primary-600 font-medium hover:bg-gray-100 transition-colors"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="loading-spinner mr-2 w-4 h-4 border-primary-600"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <h1 className="text-2xl md:text-5xl font-bold mb-1 leading-tight text-white truncate">{book.title}</h1>
+                  <p className="text-base text-white text-opacity-90 mb-2 truncate">by {book.author}</p>
+                  <div className="flex flex-wrap items-center gap-1 mb-2">
+                    <span className="badge bg-white bg-opacity-20 text-xs text-white">
+                      {book.genre}
+                    </span>
+                    {book.status === 'reading' && (
+                      <span className="badge bg-blue-500 text-xs text-white">
+                        Reading
+                      </span>
+                    )}
+                    {book.status === 'completed' && (
+                      <span className="badge bg-green-500 text-xs text-white">
+                        Completed
+                      </span>
+                    )}
+                    {book.status === 'wishlist' && (
+                      <span className="badge bg-yellow-500 text-xs text-white">
+                        Wishlist
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-white text-opacity-90 mb-2">
+                    <div className="flex items-center gap-1">
+                      <BookText className="h-4 w-4 mr-1" />
+                      {book.current_page} / {book.total_pages} pages
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  {book.status === 'reading' && (
+                    <div className="mt-2">
+                      <div className="flex justify-between text-xs text-white text-opacity-90 mb-1">
+                        <span>Progress</span>
+                        <span>{Math.round((book.current_page / book.total_pages) * 100)}%</span>
+                      </div>
+                      <div className="h-2 bg-white bg-opacity-20 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-white"
+                          style={{ width: `${(book.current_page / book.total_pages) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Book content */}
@@ -485,9 +515,9 @@ const BookDetailPage: React.FC = () => {
               {book.status === 'reading' && (
                 <button
                   onClick={() => setIsAddSessionOpen(true)}
-                  className="btn-outline text-sm"
+                  className="btn-outline text-sm flex items-center gap-1"
                 >
-                  <PlusSquare className="mr-1 h-4 w-4" />
+                  <PlusSquare className="h-4 w-4" />
                   Add Session
                 </button>
               )}

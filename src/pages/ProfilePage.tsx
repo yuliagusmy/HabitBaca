@@ -3,7 +3,8 @@ import { Award, BookOpen, BookText, Edit, LogOut, TrendingUp, User } from 'lucid
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import BadgeDisplay from '../components/features/achievements/BadgeDisplay';
-import UserLevel from '../components/features/UserLevel';
+import BadgeGrid from '../components/features/achievements/BadgeGrid';
+import UserLevel, { getLevelInfo } from '../components/features/UserLevel';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Badge } from '../types/supabase';
@@ -20,6 +21,8 @@ const ProfilePage: React.FC = () => {
   const [recentBadges, setRecentBadges] = useState<Badge[]>([]);
   const [username, setUsername] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+
+  const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
   useEffect(() => {
     if (user) {
@@ -134,6 +137,8 @@ const ProfilePage: React.FC = () => {
     return 'Legenda Literasi';
   };
 
+  const levelInfo = profile ? getLevelInfo(profile.xp) : { level: 1 };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -147,16 +152,20 @@ const ProfilePage: React.FC = () => {
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         {/* Profile header */}
         <div className="bg-gradient-to-r from-primary-600 to-secondary-700 p-6 text-white">
-          <div className="flex flex-col sm:flex-row items-center">
+          <div className="flex flex-row items-center gap-6">
             {/* Avatar */}
-            <div className="h-20 w-20 rounded-full bg-white text-primary-600 flex items-center justify-center text-3xl font-bold mb-4 sm:mb-0 sm:mr-6">
-              {username?.[0]?.toUpperCase() || 'U'}
+            <div className="h-20 w-20 rounded-full bg-white text-primary-600 flex items-center justify-center text-3xl font-bold overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={username} className="h-full w-full object-cover rounded-full" />
+              ) : (
+                (username?.[0] || 'U').toUpperCase()
+              )}
             </div>
 
             {/* User info */}
-            <div className="text-center sm:text-left flex-1">
+            <div className="flex-1 text-left">
               {isEditing ? (
-                <div className="flex items-center mb-2 max-w-xs mx-auto sm:mx-0">
+                <div className="flex items-center mb-2 max-w-xs">
                   <input
                     type="text"
                     value={username}
@@ -172,27 +181,33 @@ const ProfilePage: React.FC = () => {
                   </button>
                 </div>
               ) : (
-                <h2 className="text-2xl font-bold mb-1 flex items-center justify-center sm:justify-start">
+                <h2 className="text-2xl font-bold mb-1 flex items-center text-white">
                   {username}
                   <button
                     onClick={() => setIsEditing(true)}
                     className="ml-2 p-1 hover:bg-white hover:bg-opacity-20 rounded-full"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 text-white" />
                   </button>
                 </h2>
               )}
 
-              <div className="flex flex-col sm:flex-row items-center sm:space-x-4 mb-4">
-                <p className="text-white text-opacity-90">
-                  Level {profile?.level || 1} · {getUserTitle(profile?.level || 1)}
-                </p>
+              <div className="flex flex-wrap items-center gap-3 mb-2">
+                <span className="text-white text-opacity-90 text-base">
+                  {getUserTitle(levelInfo.level)}
+                </span>
+                {profile && profile.streak && profile.streak > 0 && (
+                  <span className="flex items-center text-orange-300 text-sm">
+                    <span className="mr-1">🔥</span> {profile.streak} day streak
+                  </span>
+                )}
               </div>
 
               {/* XP bar */}
-              <div className="max-w-xs mx-auto sm:mx-0">
+              <div className="max-w-xs mb-2">
                 <UserLevel profile={profile} />
               </div>
+              <div className="text-white text-opacity-80 text-sm">Total XP: {profile?.xp || 0}</div>
             </div>
           </div>
         </div>
@@ -313,6 +328,12 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Achievements/Badges */}
+      <div className="mt-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center"><Award className="w-6 h-6 mr-2 text-yellow-500" />Achievements</h2>
+        <BadgeGrid />
       </div>
     </motion.div>
   );
