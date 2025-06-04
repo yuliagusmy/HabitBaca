@@ -118,10 +118,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       setIsLoading(true);
+      // Jika session tidak ada, clear localStorage/cookies dan reload
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // Clear localStorage/cookies Supabase
+        localStorage.clear();
+        document.cookie = '';
+        window.location.href = '/login';
+        return;
+      }
+      // Jika session ada, logout seperti biasa
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {
       console.error('Error signing out:', error);
+      // Fallback: force clear and redirect
+      localStorage.clear();
+      document.cookie = '';
+      window.location.href = '/login';
     } finally {
       setIsLoading(false);
     }
