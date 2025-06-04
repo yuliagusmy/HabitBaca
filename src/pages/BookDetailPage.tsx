@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import AddReadingModal from '../components/features/books/AddReadingModal';
+import GenreSelector from '../components/features/books/GenreSelector';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Book, ReadingSession } from '../types/supabase';
@@ -19,8 +20,18 @@ const BookDetailPage: React.FC = () => {
   const [rating, setRating] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<Partial<Book>>({});
+  const [formData, setFormData] = useState<Partial<Omit<Book, 'genre'> & { genre: string[] }>>({});
   const [isAddSessionOpen, setIsAddSessionOpen] = useState(false);
+
+  // Genre options (bisa diambil dari AddBookModal)
+  const genreOptions = [
+    'Fantasy', 'Science Fiction', 'Mystery', 'Thriller',
+    'Romance', 'Historical Fiction', 'Non-fiction', 'Biography',
+    'Self-help', 'Business', 'Philosophy', 'Science',
+    'Poetry', 'Memoir', 'Travel', 'Religion',
+    'History', 'Psychology', 'Cooking', 'Art',
+    'Other'
+  ];
 
   useEffect(() => {
     if (id && user) {
@@ -81,13 +92,21 @@ const BookDetailPage: React.FC = () => {
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
     if (name === 'total_pages' || name === 'current_page') {
       setFormData({
         ...formData,
         [name]: Math.max(0, parseInt(value) || 0)
       });
+    } else if (name === 'genre') {
+      // genre as array
+      const currentGenre = Array.isArray(formData.genre) ? formData.genre : typeof formData.genre === 'string' ? [formData.genre] : [];
+      if (checked) {
+        setFormData({ ...formData, genre: [...currentGenre, value] });
+      } else {
+        setFormData({ ...formData, genre: currentGenre.filter((g) => g !== value) });
+      }
     } else {
       setFormData({
         ...formData,
@@ -113,6 +132,7 @@ const BookDetailPage: React.FC = () => {
         .from('books')
         .update({
           ...formData,
+          genre: Array.isArray(formData.genre) ? formData.genre : formData.genre ? [formData.genre] : [],
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
@@ -356,13 +376,10 @@ const BookDetailPage: React.FC = () => {
                       <label className="block text-sm font-medium text-white mb-1">
                         Genre
                       </label>
-                      <input
-                        type="text"
-                        name="genre"
-                        value={formData.genre || ''}
-                        onChange={handleFormChange}
-                        className="w-full px-3 py-2 bg-white bg-opacity-90 border border-transparent rounded-lg text-gray-800"
-                        required
+                      <GenreSelector
+                        selectedGenres={Array.isArray(formData.genre) ? formData.genre : formData.genre ? [formData.genre] : []}
+                        onChange={(genres) => setFormData({ ...formData, genre: genres })}
+                        className="bg-white bg-opacity-90"
                       />
                     </div>
 
@@ -459,9 +476,19 @@ const BookDetailPage: React.FC = () => {
                   <h1 className="text-2xl md:text-5xl font-bold mb-1 leading-tight text-white truncate">{book.title}</h1>
                   <p className="text-base text-white text-opacity-90 mb-2 truncate">by {book.author}</p>
                   <div className="flex flex-wrap items-center gap-1 mb-2">
-                    <span className="badge bg-white bg-opacity-20 text-xs text-white">
-                      {book.genre}
-                    </span>
+                    {Array.isArray(book.genre)
+                      ? book.genre.map((g) => (
+                          <span key={g} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 mr-1 mb-1">
+                            <BookOpen className="h-3 w-3 mr-1 text-primary-400" />
+                            {g}
+                          </span>
+                        ))
+                      : book.genre && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 mr-1 mb-1">
+                            <BookOpen className="h-3 w-3 mr-1 text-primary-400" />
+                            {book.genre}
+                          </span>
+                        )}
                     {book.status === 'reading' && (
                       <span className="badge bg-blue-500 text-xs text-white">
                         Reading

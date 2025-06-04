@@ -13,12 +13,12 @@ const Sidebar = () => {
   const { signOut, profile, user } = useAuth();
 
   return (
-    <div className="h-full flex flex-col bg-white border-r border-gray-200">
+    <div className="h-full flex flex-col bg-white border-r border-gray-200 w-72 min-w-[18rem]">
       {/* App logo & title */}
       <div className="flex items-center justify-center h-16 px-4 border-b border-gray-200">
         <NavLink
           to="/"
-          className="flex items-center space-x-2 text-primary-600 font-bold text-xl"
+          className="flex items-left space-x-2 text-primary-600 font-bold text-4xl"
         >
           <BookOpen className="w-8 h-8" />
           <span>HabitBaca</span>

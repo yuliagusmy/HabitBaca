@@ -97,7 +97,7 @@ const LoginPage: React.FC = () => {
             {/* Border gradient */}
             <div className="absolute inset-0 rounded-3xl pointer-events-none border-4 border-primary-400/30" style={{zIndex:0}} />
             {/* Ilustrasi custom animasi */}
-            <motion.div
+          <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
               className="z-10 mb-2"

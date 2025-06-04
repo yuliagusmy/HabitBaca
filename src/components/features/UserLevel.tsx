@@ -82,36 +82,40 @@ const UserLevel: React.FC<UserLevelProps> = ({ profile, user, variant = 'profile
 
   if (variant === 'sidebar') {
     return (
-      <div className="bg-white rounded-2xl shadow-md px-6 py-5 flex flex-col items-center space-y-2">
+      <div className="bg-white rounded-2xl shadow-md px-3 py-3 flex flex-row items-center w-full gap-3">
         {/* Avatar */}
-        <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-primary-400 to-primary-600 flex items-center justify-center text-white text-2xl font-bold shadow mb-1">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-primary-400 to-primary-600 flex items-center justify-center text-white text-xl font-bold shadow flex-shrink-0">
           {user && user.user_metadata && user.user_metadata.picture ? (
             <img src={user.user_metadata.picture} alt={profile.username} className="w-full h-full rounded-full object-cover" />
           ) : (
             (profile.username?.[0] || '?').toUpperCase()
           )}
         </div>
-        {/* Username */}
-        <div className="text-primary-900 font-semibold text-base truncate">{username}</div>
-        {/* Level badge */}
-        <span className="text-xs font-bold text-primary-700 bg-primary-50 rounded-full px-3 py-0.5">
-          Lvl {level}
-        </span>
-        {/* Title */}
-        <div className="text-sm font-bold text-primary-800 mt-1 mb-1">{getUserTitle(level)}</div>
-        {/* XP Bar */}
-        <div className="w-full">
-          <div className="relative h-2 rounded-full bg-gray-200 overflow-hidden">
-            <motion.div
-              className="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-primary-400 to-orange-400 transition-all duration-500"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-            />
+        {/* Info User */}
+        <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <div className="text-primary-900 font-bold text-base truncate leading-tight">{username}</div>
+            <span className="inline-block text-[11px] font-bold text-primary-700 bg-primary-50 rounded-full px-2 py-0.5 shadow-sm">
+              Lvl {level}
+            </span>
           </div>
-          <div className="flex justify-between text-xs text-gray-500 font-semibold mt-1">
-            <span>{currentXP} XP</span>
-            <span>{xpToNext} XP</span>
+          <div className="text-xs font-semibold text-primary-500 tracking-wide leading-tight mb-0.5">{getUserTitle(level)}</div>
+          <div className="w-full max-w-[140px]">
+            <div className="relative h-2 rounded-full bg-gray-200 overflow-hidden">
+              <motion.div
+                className="absolute left-0 top-0 h-2 rounded-full bg-gradient-to-r from-primary-400 via-primary-500 to-orange-400 transition-all duration-500"
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ duration: 1, ease: 'easeOut' }}
+              />
+            </div>
+            <div className="flex justify-between text-[11px] text-gray-500 font-semibold mt-0.5">
+              <span>{currentXP} XP</span>
+              <span>{xpToNext} XP</span>
+            </div>
+          </div>
+          <div className="text-[11px] text-gray-400 font-semibold mt-0.5 tracking-wide">
+            Total XP: <span className="text-primary-700 font-bold">{profile.xp}</span>
           </div>
         </div>
       </div>

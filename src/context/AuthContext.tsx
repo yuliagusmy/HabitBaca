@@ -10,6 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -100,10 +101,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogle = async () => {
     try {
       setIsLoading(true);
+      // Gunakan URL yang berbeda untuk development dan production
+      const redirectTo = process.env.NODE_ENV === 'development'
+        ? 'http://localhost:5173'
+        : window.location.origin;
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo
         }
       });
 
@@ -142,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, isLoading, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, isLoading, signInWithGoogle, signOut, refreshProfile: () => user ? fetchUserProfile(user.id) : Promise.resolve() }}>
       {children}
     </AuthContext.Provider>
   );

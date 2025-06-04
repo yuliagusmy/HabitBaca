@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, BookOpen } from 'lucide-react';
+import { BookOpen, Plus } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
-import { Book, ReadingSession } from '../types/supabase';
 import ReadingCalendar from '../components/features/ReadingCalendar';
 import BookCard from '../components/features/books/BookCard';
-import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
+import { Book, ReadingSession } from '../types/supabase';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -23,7 +23,7 @@ const DashboardPage: React.FC = () => {
 
   const fetchDashboardData = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       // Fetch books in progress
@@ -34,17 +34,17 @@ const DashboardPage: React.FC = () => {
         .eq('status', 'reading')
         .order('updated_at', { ascending: false })
         .limit(4);
-      
+
       if (booksError) throw booksError;
-      
+
       // Add calculated progress field to books
       const booksWithProgress = booksData?.map(book => ({
         ...book,
         progress: Math.round((book.current_page / book.total_pages) * 100)
       })) || [];
-      
+
       setCurrentBooks(booksWithProgress);
-      
+
       // Fetch recent reading sessions
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('reading_sessions')
@@ -57,9 +57,9 @@ const DashboardPage: React.FC = () => {
         .eq('user_id', user.id)
         .order('date', { ascending: false })
         .limit(5);
-      
+
       if (sessionsError) throw sessionsError;
-      
+
       setRecentSessions(sessionsData || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -93,10 +93,10 @@ const DashboardPage: React.FC = () => {
           Track your reading progress and build your habit.
         </p>
       </motion.div>
-      
+
       {/* Reading Calendar */}
       <ReadingCalendar />
-      
+
       {/* Current Books */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
@@ -105,9 +105,9 @@ const DashboardPage: React.FC = () => {
             View all
           </Link>
         </div>
-        
+
         {isLoading ? (
-          <div className="flex justify-center items-center h-40">
+          <div className="flex justify-center items-center h-40 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="loading-spinner"></div>
           </div>
         ) : currentBooks.length === 0 ? (
@@ -123,18 +123,18 @@ const DashboardPage: React.FC = () => {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
             {currentBooks.map(book => (
               <BookCard key={book.id} book={book} />
             ))}
           </div>
         )}
       </div>
-      
+
       {/* Recent Reading Activity */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-800">Recent Activity</h2>
-        
+
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
             <div className="loading-spinner"></div>
@@ -149,7 +149,7 @@ const DashboardPage: React.FC = () => {
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="divide-y divide-gray-200">
               {recentSessions.map((session, index) => (
-                <div 
+                <div
                   key={session.id}
                   className="p-4 hover:bg-gray-50 transition-colors"
                 >
@@ -160,10 +160,10 @@ const DashboardPage: React.FC = () => {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">
-                          {session.books?.title || 'Unknown Book'}
+                          {session.book?.title || 'Unknown Book'}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {session.books?.author || 'Unknown Author'}
+                          {session.book?.author || 'Unknown Author'}
                         </p>
                       </div>
                     </div>

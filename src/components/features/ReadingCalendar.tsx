@@ -142,7 +142,7 @@ const ReadingCalendar = () => {
   return (
     <div className="bg-white rounded-lg shadow-sm p-2">
       <div className="flex justify-between items-center mb-2">
-        <h2 className="text-xs font-semibold text-gray-800">Reading Calendar</h2>
+        <h2 className="text-xl font-semibold text-gray-800">Reading Calendar</h2>
         <div className="flex items-center space-x-1">
           <button
             onClick={prevYear}
@@ -174,7 +174,7 @@ const ReadingCalendar = () => {
           <div className="flex ml-12 mb-2">
             {monthLabels.map(({ month, col }, idx) => (
               <div
-                key={month}
+                key={`${month}-${idx}`}
                 style={{ marginLeft: idx === 0 ? 0 : `${(col - monthLabels[idx - 1].col) * 32}px` }}
                 className="text-sm font-medium text-gray-500"
               >
@@ -204,6 +204,8 @@ const ReadingCalendar = () => {
               ))}
             </div>
           </div>
+        </div>
+      )}
           {/* Legend */}
           <div className="mt-4 flex items-center space-x-3 text-[12px] text-gray-600">
             <div className="flex items-center space-x-2">
@@ -227,8 +229,6 @@ const ReadingCalendar = () => {
               <span>20+</span>
             </div>
           </div>
-        </div>
-      )}
     </div>
   );
 };

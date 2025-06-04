@@ -39,6 +39,7 @@ export interface Database {
           xp: number;
           streak: number;
           last_reading_date: string | null;
+          total_pages_read: number;
           created_at: string;
           updated_at: string;
         };
@@ -81,6 +82,7 @@ export interface UserProfile {
   xp: number;
   streak: number;
   last_reading_date: string | null;
+  total_pages_read: number;
 }
 
 export interface Book {

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Award, BookOpen, BookText, Edit, LogOut, TrendingUp, User } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import BadgeDisplay from '../components/features/achievements/BadgeDisplay';
 import BadgeGrid from '../components/features/achievements/BadgeGrid';
@@ -10,7 +10,7 @@ import { supabase } from '../lib/supabase';
 import { Badge } from '../types/supabase';
 
 const ProfilePage: React.FC = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({
     totalBooksRead: 0,
@@ -21,6 +21,7 @@ const ProfilePage: React.FC = () => {
   const [recentBadges, setRecentBadges] = useState<Badge[]>([]);
   const [username, setUsername] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const hasSyncedRef = useRef(false);
 
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
@@ -32,6 +33,84 @@ const ProfilePage: React.FC = () => {
       }
     }
   }, [user, profile]);
+
+  useEffect(() => {
+    // Sinkronisasi otomatis XP & halaman untuk buku completed
+    if (!user || hasSyncedRef.current) return;
+    hasSyncedRef.current = true;
+    const syncCompletedBooks = async () => {
+      try {
+        // 1. Ambil semua buku completed milik user
+        const { data: books, error: booksError } = await supabase
+          .from('books')
+          .select('id, total_pages')
+          .eq('user_id', user.id)
+          .eq('status', 'completed');
+        if (booksError) throw booksError;
+        if (!books) return;
+
+        // 2. Ambil semua reading_sessions milik user
+        const { data: sessions, error: sessionsError } = await supabase
+          .from('reading_sessions')
+          .select('book_id')
+          .eq('user_id', user.id);
+        if (sessionsError) throw sessionsError;
+        const sessionBookIds = new Set(sessions?.map(s => s.book_id));
+
+        // 3. Filter buku completed yang belum ada reading session-nya
+        const booksToSync = books.filter(book => !sessionBookIds.has(book.id));
+        let didSync = false;
+        if (booksToSync.length > 0) {
+          const today = new Date().toISOString().split('T')[0];
+          for (const book of booksToSync) {
+            await supabase.from('reading_sessions').insert({
+              user_id: user.id,
+              book_id: book.id,
+              pages_read: book.total_pages,
+              date: today
+            });
+          }
+          didSync = true;
+        }
+
+        // 4. Ambil ulang total halaman dan total buku completed
+        const { data: allSessions, error: allSessionsError } = await supabase
+          .from('reading_sessions')
+          .select('pages_read')
+          .eq('user_id', user.id);
+        if (allSessionsError) throw allSessionsError;
+        const totalPagesRead = allSessions?.reduce((sum, s) => sum + (s.pages_read || 0), 0) || 0;
+        const totalBooksCompleted = books.length;
+        const newXP = totalPagesRead + (totalBooksCompleted * 50);
+
+        // 5. Update XP & total_pages_read SELALU, meskipun tidak ada buku baru
+        console.log('Update user_profiles:', {
+          xp: newXP,
+          total_pages_read: totalPagesRead,
+          last_reading_date: new Date().toISOString().split('T')[0],
+          user_id: user.id
+        });
+        const { error: updateError } = await supabase.from('user_profiles').update({
+          xp: newXP,
+          total_pages_read: totalPagesRead,
+          last_reading_date: new Date().toISOString().split('T')[0]
+        }).eq('user_id', user.id);
+        if (updateError) {
+          console.error('Failed to update XP:', updateError);
+        }
+        // 6. Delay sebelum refreshProfile
+        await new Promise(res => setTimeout(res, 500));
+        if (refreshProfile) await refreshProfile();
+        // 7. Tampilkan toast hanya jika ada perubahan
+        if (didSync) {
+          toast.success('XP & halaman berhasil disinkronkan!');
+        }
+      } catch (err) {
+        console.error('Error syncing completed books:', err);
+      }
+    };
+    syncCompletedBooks();
+  }, [user, refreshProfile]);
 
   const fetchProfileData = async () => {
     if (!user) return;
