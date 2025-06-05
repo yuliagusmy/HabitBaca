@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
-import { BookOpen, BookText, Calendar, CheckCircle, ChevronLeft, Edit, PlusSquare, Star, StarHalf, Trash2 } from 'lucide-react';
+import { BookOpen, BookText, Calendar, CheckCircle, ChevronLeft, Edit, PlusSquare, Star, StarHalf, Trash2, Trophy } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import AddReadingModal from '../components/features/books/AddReadingModal';
+import BookCompletionModal from '../components/features/books/BookCompletionModal';
 import GenreSelector from '../components/features/books/GenreSelector';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -22,6 +23,9 @@ const BookDetailPage: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Omit<Book, 'genre'> & { genre: string[] }>>({});
   const [isAddSessionOpen, setIsAddSessionOpen] = useState(false);
+  const [showAchievement, setShowAchievement] = useState(false);
+  const [achievementData, setAchievementData] = useState<any>(null);
+  const [achievementQuote, setAchievementQuote] = useState('');
 
   // Genre options (bisa diambil dari AddBookModal)
   const genreOptions = [
@@ -238,6 +242,18 @@ const BookDetailPage: React.FC = () => {
     });
   };
 
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }) + ' ' + date.toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   const renderStars = (count: number) => {
     return Array.from({ length: 5 }, (_, i) => {
       if (i + 1 <= count) {
@@ -248,6 +264,85 @@ const BookDetailPage: React.FC = () => {
         return <Star key={i} className="h-5 w-5 text-gray-300" />;
       }
     });
+  };
+
+  const getRandomQuote = () => {
+    const motivationalQuotes = [
+      "Every page is a step toward wisdom. Keep going!",
+      "Books are the quietest and most constant of friends.",
+      "Reading is to the mind what exercise is to the body.",
+      "A reader lives a thousand lives before dying.",
+      "Today a reader, tomorrow a leader.",
+      "The more that you read, the more things you will know.",
+      "Reading gives us someplace to go when we have to stay where we are.",
+      "A book is a dream that you hold in your hand.",
+      "Reading is an exercise in empathy.",
+      "The reading of all good books is like conversation with the finest minds.",
+      "Books don't just go with you, they take you where you've never been.",
+      "Read more, learn more, live more.",
+      "A book a day keeps reality away.",
+      "Let your bookshelf tell your story.",
+      "Your mind deserves the nourishment that only reading gives.",
+      "Reading opens doors that others don't even know exist.",
+      "Get lost in a book and find yourself.",
+      "Books are mirrors: you only see in them what you already have inside you.",
+      "Turn the page, change your life.",
+      "Reading fuels imagination like nothing else.",
+      "Setiap halaman adalah langkah menuju impian.",
+      "Buku adalah jendela dunia, teruslah membuka lembarannya!",
+      "Kamu luar biasa! Satu halaman lagi, satu ilmu lagi.",
+      "Bacaan hari ini, inspirasi esok hari.",
+      "Teruslah membaca, dunia menantimu!",
+      "Konsistensi kecil hari ini, hasil besar nanti.",
+      "Buku adalah teman setia di setiap perjalanan hidup.",
+      "Satu bab hari ini, satu kemenangan untuk dirimu.",
+      "Jadilah pahlawan bagi dirimu sendiri lewat membaca.",
+      "Setiap buku adalah petualangan baru. Nikmati!",
+      "Membaca membawamu lebih dekat ke impian.",
+      "Dunia bisa berubah lewat satu buku yang dibaca seseorang.",
+      "Pelan tapi pasti, kamu semakin hebat dengan membaca.",
+      "Membaca membuatmu bertumbuh dalam diam.",
+      "Hari ini baca, esok jadi luar biasa.",
+      "Kamu sudah lebih baik dari kemarin. Teruskan!",
+      "Ilmu itu cahaya. Baca terus dan bersinarlah.",
+      "Buku adalah investasi terbaik untuk masa depanmu.",
+      "Langkah kecilmu hari ini adalah awal perubahan besar.",
+      "Buku tak hanya dibaca, tapi dirasakan.",
+      "Setiap buku punya pesan khusus untukmu.",
+      "Semakin kamu membaca, semakin kamu bebas.",
+      "Ilmu tidak akan berat dibawa, justru meringankan hidup.",
+      "Membaca membuatmu peka terhadap dunia.",
+      "Hidup penuh warna dengan kata-kata dari buku.",
+      "Buku adalah kendaraan waktu. Baca dan jelajahi!",
+      "Satu paragraf bisa mengubah arah hidupmu.",
+      "Jangan remehkan satu halaman. Itu bisa jadi awal segalanya.",
+      "Bacaan ringan hari ini, pemikiran mendalam esok hari.",
+      "Kata demi kata, kamu membangun versi terbaik dirimu.",
+      "Buku menyimpan kekuatan yang tak terlihat mata.",
+      "Baca bukan karena wajib, tapi karena kamu layak untuk tahu lebih.",
+      "Pengetahuan adalah bentuk cinta tertinggi pada diri sendiri.",
+      "Semangatmu luar biasa! Teruskan jejak membacamu.",
+      "Membaca tak pernah sia-sia, meski satu kalimat sehari.",
+      "Dengan membaca, kamu membangun masa depanmu diam-diam.",
+      "Jadikan membaca sebagai hadiah untuk dirimu sendiri.",
+      "Bacaan yang bagus akan menemukanmu di saat yang tepat."
+    ];
+    return motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+  };
+
+  const handleViewAchievement = () => {
+    if (!book) return;
+
+    setAchievementData({
+      coverUrl: book.cover_url || '',
+      title: book.title,
+      author: book.author,
+      totalPages: book.total_pages,
+      genre: book.genre,
+      finishedAt: formatDate(book.updated_at),
+    });
+    setAchievementQuote(getRandomQuote());
+    setShowAchievement(true);
   };
 
   if (isLoading && !book) {
@@ -534,6 +629,23 @@ const BookDetailPage: React.FC = () => {
 
         {/* Book content */}
         <div className="p-6">
+          {/* Book completion indicator */}
+          {book.status === 'completed' && !isEditing && (
+            <div className="mb-8 text-center space-y-4">
+              <div className="inline-flex items-center justify-center bg-success-100 text-success-800 px-4 py-2 rounded-full">
+                <CheckCircle className="h-5 w-5 mr-2" />
+                <span className="font-medium">Completed on {formatDate(book.updated_at)}</span>
+              </div>
+              <button
+                onClick={handleViewAchievement}
+                className="btn-primary flex items-center justify-center gap-2 mx-auto"
+              >
+                <Trophy className="h-5 w-5" />
+                View Achievement
+              </button>
+            </div>
+          )}
+
           {/* Reading sessions section */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-4">
@@ -567,7 +679,7 @@ const BookDetailPage: React.FC = () => {
                       <div className="flex items-center">
                         <Calendar className="h-4 w-4 text-gray-500 mr-2" />
                         <span className="text-sm text-gray-600">
-                          {formatDate(session.date)}
+                          {formatDateTime(session.date)}
                         </span>
                       </div>
                       <span className="font-medium text-primary-600">
@@ -642,16 +754,6 @@ const BookDetailPage: React.FC = () => {
               )}
             </div>
           )}
-
-          {/* Book completion indicator */}
-          {book.status === 'completed' && !isEditing && (
-            <div className="mt-8 text-center">
-              <div className="inline-flex items-center justify-center bg-success-100 text-success-800 px-4 py-2 rounded-full">
-                <CheckCircle className="h-5 w-5 mr-2" />
-                <span className="font-medium">Completed on {formatDate(book.updated_at)}</span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
       <AddReadingModal
@@ -661,6 +763,15 @@ const BookDetailPage: React.FC = () => {
           fetchBookData();
         }}
       />
+
+      {showAchievement && achievementData && (
+        <BookCompletionModal
+          open={showAchievement}
+          onClose={() => setShowAchievement(false)}
+          book={achievementData}
+          quote={achievementQuote}
+        />
+      )}
     </div>
   );
 };

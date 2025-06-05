@@ -271,22 +271,16 @@ const ProfilePage: React.FC = () => {
                 </h2>
               )}
 
-              <div className="flex flex-wrap items-center gap-3 mb-2">
-                <span className="text-white text-opacity-90 text-base">
-                  {getUserTitle(levelInfo.level)}
-                </span>
-                {profile && profile.streak && profile.streak > 0 && (
-                  <span className="flex items-center text-orange-300 text-sm">
-                    <span className="mr-1">🔥</span> {profile.streak} day streak
-                  </span>
-                )}
-              </div>
-
               {/* XP bar */}
               <div className="max-w-xs mb-2">
                 <UserLevel profile={profile} />
               </div>
               <div className="text-white text-opacity-80 text-sm">Total XP: {profile?.xp || 0}</div>
+              {profile && profile.streak && profile.streak > 0 && (
+                <div className="flex items-center text-orange-300 text-sm mt-1">
+                   {profile.streak} day streak <span className="mr-1">🔥</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
