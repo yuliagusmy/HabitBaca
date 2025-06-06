@@ -17,6 +17,7 @@ const BooksPage: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'reading' | 'completed' | 'wishlist'>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [gridSize, setGridSize] = useState<0 | 1 | 2>(0);
 
   useEffect(() => {
     if (user) {
@@ -166,9 +167,12 @@ const BooksPage: React.FC = () => {
 
           <div className="flex rounded-lg border border-gray-300 overflow-hidden">
             <button
-              onClick={() => setViewMode('grid')}
+              onClick={() => {
+                setViewMode('grid');
+                setGridSize((prev) => ((prev + 1) % 3) as 0 | 1 | 2);
+              }}
               className={`p-2 ${viewMode === 'grid' ? 'bg-gray-100' : 'bg-white'}`}
-              title="Grid view"
+              title={`Grid view (${['Large','Medium','Small'][gridSize]})`}
             >
               <Grid className="h-5 w-5 text-gray-600" />
             </button>
@@ -213,7 +217,15 @@ const BooksPage: React.FC = () => {
       ) : (
         <AnimatePresence>
           {viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div
+              className={
+                gridSize === 0
+                  ? 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+                  : gridSize === 1
+                  ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3'
+                  : 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2'
+              }
+            >
               {filteredBooks.map(book => (
                 <motion.div
                   key={book.id}
@@ -223,7 +235,7 @@ const BooksPage: React.FC = () => {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <BookCard book={book} />
+                  <BookCard book={book} size={gridSize === 0 ? 'large' : gridSize === 1 ? 'medium' : 'small'} />
                 </motion.div>
               ))}
             </div>

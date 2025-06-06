@@ -6,9 +6,10 @@ import { Book } from '../../../types/supabase';
 
 interface BookCardProps {
   book: Book;
+  size?: 'large' | 'medium' | 'small';
 }
 
-const BookCard: React.FC<BookCardProps> = ({ book }) => {
+const BookCard: React.FC<BookCardProps> = ({ book, size = 'large' }) => {
   // Calculate progress percentage
   const progress = Math.round((book.current_page / book.total_pages) * 100);
 
@@ -81,84 +82,104 @@ const BookCard: React.FC<BookCardProps> = ({ book }) => {
     'Other': 'bg-slate-200 text-slate-900 border border-slate-300'
   };
 
+  // Ukuran dinamis
+  const coverSize = 'aspect-[2/3] w-full';
+  const padding = size === 'large' ? 'p-4' : size === 'medium' ? 'p-2' : 'p-1';
+  const titleClass = size === 'large' ? 'text-base' : size === 'medium' ? 'text-sm' : 'text-xs';
+  const authorClass = size === 'large' ? 'text-sm' : size === 'medium' ? 'text-xs' : 'text-[10px]';
+  const genreBadgeClass = size === 'large' ? '' : size === 'medium' ? 'scale-90' : 'scale-75';
+  const showDetails = size !== 'small';
+
   return (
-    <Link to={`/books/${book.id}`}>
+    <Link to={`/books/${book.id}`} title={book.title}>
       <motion.div
-        whileHover={{ y: -5 }}
-        className="card card-hover h-full"
+        whileHover={{ y: -3 }}
+        className={`card card-hover h-full ${size === 'small' ? 'min-w-0' : ''}`}
       >
         <div className="flex flex-col h-full">
           {/* Book cover */}
-          <div className={`h-63 rounded-t-xl flex items-center justify-center bg-gradient-to-br ${getGenreColor()}`}>
+          <div className={`${coverSize} rounded-t-xl flex items-center justify-center bg-gradient-to-br ${getGenreColor()}`}>
             {book.cover_url ? (
               <img
                 src={book.cover_url}
                 alt={book.title}
-                className="h-full w-full object-cover rounded-t-xl"
+                className="w-full h-full object-cover rounded-t-xl"
                 style={{ aspectRatio: '2/3' }}
               />
             ) : (
-              <BookOpen className="h-16 w-16 text-white" />
+              <BookOpen className={size === 'small' ? 'h-8 w-8 text-white' : size === 'medium' ? 'h-12 w-12 text-white' : 'h-16 w-16 text-white'} />
             )}
           </div>
 
-          {/* Book details + progress bar sticky bottom */}
-          <div className="flex flex-col flex-1 p-4">
-            <div className="flex-1">
-              <div className="flex justify-between items-start mb-1">
-                <h3 className="font-medium text-gray-900 line-clamp-1">{book.title}</h3>
-                <StatusIcon />
+          {/* Book details */}
+          {size === 'large' && (
+            <div className={`flex flex-col flex-1 ${padding}`}>
+              <div className="flex-1">
+                <div className="flex justify-between items-start mb-1">
+                  <h3 className={`font-medium text-gray-900 line-clamp-1 ${titleClass}`}>{book.title}</h3>
+                  <StatusIcon />
+                </div>
+                <p className={`text-gray-500 mb-2 ${authorClass}`}>{book.author}</p>
+                <div className={`flex flex-wrap gap-1 mb-2`}>
+                  {Array.isArray(book.genre)
+                    ? book.genre.map((g) => (
+                        <span
+                          key={g}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-1 mb-1 ${genreColors[g] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}
+                        >
+                          <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
+                          {g}
+                        </span>
+                      ))
+                    : book.genre && (
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-1 mb-1 ${genreColors[book.genre] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}>
+                          <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
+                          {book.genre}
+                        </span>
+                      )}
+                  {getStatusBadge()}
+                </div>
               </div>
-
-              <p className="text-sm text-gray-500 mb-2">{book.author}</p>
-
-              <div className="flex flex-wrap gap-1 mb-3">
-                {Array.isArray(book.genre)
-                  ? book.genre.map((g) => (
-                      <span
-                        key={g}
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-1 mb-1 ${genreColors[g] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}
-                      >
-                        <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
-                        {g}
-                      </span>
-                    ))
-                  : book.genre && (
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-1 mb-1 ${genreColors[book.genre] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}>
-                        <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
-                        {book.genre}
-                      </span>
-                    )}
+              {/* Progress bar for books being read */}
+              {book.status === 'reading' && (
+                <div className="pt-2 mt-auto">
+                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>{book.current_page} of {book.total_pages} pages</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div className="xp-bar-container">
+                    <div
+                      className="xp-bar-progress"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+              {/* Completion indicator for completed books */}
+              {book.status === 'completed' && (
+                <div className="pt-2 mt-auto">
+                  <div className="flex items-center text-success-600">
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    <span className="text-sm">Completed {book.total_pages} pages</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {size === 'medium' && (
+            <div className="flex flex-col flex-1 p-2">
+              <h3 className="font-medium text-gray-900 text-sm line-clamp-1 mb-1">{book.title}</h3>
+              <p className="text-xs text-gray-500 mb-1 line-clamp-1">{book.author}</p>
+              <div className="flex flex-wrap gap-1 mb-1">
                 {getStatusBadge()}
               </div>
             </div>
-
-            {/* Progress bar for books being read */}
-            {book.status === 'reading' && (
-              <div className="pt-2 mt-auto">
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>{book.current_page} of {book.total_pages} pages</span>
-                  <span>{progress}%</span>
-                </div>
-                <div className="xp-bar-container">
-                  <div
-                    className="xp-bar-progress"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-
-            {/* Completion indicator for completed books */}
-            {book.status === 'completed' && (
-              <div className="pt-2 mt-auto">
-                <div className="flex items-center text-success-600">
-                  <CheckCircle className="h-4 w-4 mr-1" />
-                  <span className="text-sm">Completed {book.total_pages} pages</span>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
+          {size === 'small' && (
+            <div className="px-1 py-1 text-center">
+              <h3 className="text-xs font-medium text-gray-900 truncate" title={book.title}>{book.title}</h3>
+            </div>
+          )}
         </div>
       </motion.div>
     </Link>
