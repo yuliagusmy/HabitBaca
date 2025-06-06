@@ -8,6 +8,23 @@ import UserLevel, { getLevelInfo } from '../components/features/UserLevel';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Badge } from '../types/supabase';
+import { fetchUserActivities, syncUserXP } from '../utils/syncUserXP';
+
+// Utility untuk konversi menit ke jam/menit
+function formatMinutesToHours(minutes: number) {
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+// Helper untuk format genre singkat di card
+function getShortGenre(genreStr: string) {
+  if (!genreStr) return '-';
+  const arr = genreStr.split(',').map(g => g.trim()).filter(Boolean);
+  if (arr.length <= 2) return arr.join(', ');
+  return arr.slice(0, 2).join(', ') + ', ...';
+}
 
 const ProfilePage: React.FC = () => {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -22,6 +39,10 @@ const ProfilePage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const hasSyncedRef = useRef(false);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [showAllActivities, setShowAllActivities] = useState(false);
+  const [showGenreModal, setShowGenreModal] = useState(false);
+  const [genreDetail, setGenreDetail] = useState<{genre: string, count: number}[]>([]);
 
   const avatarUrl = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
@@ -31,6 +52,8 @@ const ProfilePage: React.FC = () => {
       if (profile) {
         setUsername(profile.username);
       }
+      // Fetch recent activities
+      fetchUserActivities(user.id, 100).then(setActivities).catch(console.error);
     }
   }, [user, profile]);
 
@@ -84,20 +107,8 @@ const ProfilePage: React.FC = () => {
         const newXP = totalPagesRead + (totalBooksCompleted * 50);
 
         // 5. Update XP & total_pages_read SELALU, meskipun tidak ada buku baru
-        console.log('Update user_profiles:', {
-          xp: newXP,
-          total_pages_read: totalPagesRead,
-          last_reading_date: new Date().toISOString().split('T')[0],
-          user_id: user.id
-        });
-        const { error: updateError } = await supabase.from('user_profiles').update({
-          xp: newXP,
-          total_pages_read: totalPagesRead,
-          last_reading_date: new Date().toISOString().split('T')[0]
-        }).eq('user_id', user.id);
-        if (updateError) {
-          console.error('Failed to update XP:', updateError);
-        }
+        await syncUserXP(user.id);
+
         // 6. Delay sebelum refreshProfile
         await new Promise(res => setTimeout(res, 500));
         if (refreshProfile) await refreshProfile();
@@ -150,18 +161,25 @@ const ProfilePage: React.FC = () => {
       const genreCounts: {[key: string]: number} = {};
       booksRes.data.forEach(book => {
         if (book.genre) {
-          genreCounts[book.genre] = (genreCounts[book.genre] || 0) + 1;
+          // genre bisa array atau string
+          if (Array.isArray(book.genre)) {
+            book.genre.forEach((g: string) => {
+              genreCounts[g] = (genreCounts[g] || 0) + 1;
+            });
+          } else {
+            genreCounts[book.genre] = (genreCounts[book.genre] || 0) + 1;
+          }
         }
       });
 
-      let favoriteGenre = 'None';
-      let maxCount = 0;
-      for (const [genre, count] of Object.entries(genreCounts)) {
-        if (count > maxCount) {
-          maxCount = count;
-          favoriteGenre = genre;
-        }
-      }
+      // Ambil top 2 genre
+      const sortedGenres = Object.entries(genreCounts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([genre]) => genre);
+      let favoriteGenre = '-';
+      if (sortedGenres.length === 1) favoriteGenre = sortedGenres[0];
+      else if (sortedGenres.length === 2) favoriteGenre = sortedGenres.slice(0, 2).join(', ');
+      else if (sortedGenres.length > 2) favoriteGenre = sortedGenres.slice(0, 2).join(', ') + ', ...';
 
       // Calculate total pages
       const totalPages = sessionsRes.data.reduce((sum, session) => sum + session.pages_read, 0);
@@ -217,6 +235,66 @@ const ProfilePage: React.FC = () => {
   };
 
   const levelInfo = profile ? getLevelInfo(profile.xp) : { level: 1 };
+
+  // Helper untuk render aktivitas (sama dengan DashboardPage)
+  const renderActivity = (activity: any, idx: number) => {
+    if (activity.type === 'add_book') {
+      return (
+        <div key={idx} className="flex items-center gap-3 py-2">
+          <BookOpen className="h-5 w-5 text-primary-500" />
+          <span>Added <b>{activity.title}</b> by {activity.author}</span>
+          <span className="ml-auto text-xs text-gray-400">{new Date(activity.time).toLocaleString()}</span>
+        </div>
+      );
+    }
+    if (activity.type === 'complete_book') {
+      return (
+        <div key={idx} className="flex items-center gap-3 py-2">
+          <BookOpen className="h-5 w-5 text-success-500" />
+          <span>Completed <b>{activity.title}</b> by {activity.author} ({activity.totalPages} pages)</span>
+          <span className="ml-auto text-xs text-gray-400">{new Date(activity.time).toLocaleString()}</span>
+        </div>
+      );
+    }
+    if (activity.type === 'reading_session') {
+      return (
+        <div key={idx} className="flex items-center gap-3 py-2">
+          <BookOpen className="h-5 w-5 text-secondary-500" />
+          <span>Read <b>{activity.pagesRead}</b> pages of <b>{activity.bookTitle}</b> by {activity.bookAuthor}</span>
+          <span className="ml-auto text-xs text-gray-400">{new Date(activity.time).toLocaleString()}</span>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Fetch genre detail saat modal dibuka
+  const fetchGenreDetail = async () => {
+    if (!user) return;
+    const { data: books, error } = await supabase
+      .from('books')
+      .select('genre')
+      .eq('user_id', user.id)
+      .eq('status', 'completed');
+    if (error) return;
+    const genreCounts: {[key: string]: number} = {};
+    books.forEach(book => {
+      if (book.genre) {
+        // genre bisa array atau string
+        if (Array.isArray(book.genre)) {
+          book.genre.forEach((g: string) => {
+            genreCounts[g] = (genreCounts[g] || 0) + 1;
+          });
+        } else {
+          genreCounts[book.genre] = (genreCounts[book.genre] || 0) + 1;
+        }
+      }
+    });
+    const detail = Object.entries(genreCounts)
+      .map(([genre, count]) => ({ genre, count }))
+      .sort((a, b) => b.count - a.count);
+    setGenreDetail(detail);
+  };
 
   return (
     <motion.div
@@ -288,60 +366,41 @@ const ProfilePage: React.FC = () => {
         {/* Stats overview */}
         <div className="p-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="bg-primary-100 p-2 rounded-full">
-                  <BookText className="h-5 w-5 text-primary-600" />
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500">Books Read</div>
-                  <div className="text-xl font-semibold text-gray-900">
-                    {isLoading ? '-' : stats.totalBooksRead}
-                  </div>
-                </div>
+            {/* Books Read */}
+            <div className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-100 mb-2">
+                <BookText className="h-5 w-5 text-primary-600" />
               </div>
+              <div className="text-xs text-gray-500 mb-1">Books Read</div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">{isLoading ? '-' : stats.totalBooksRead}</div>
             </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="bg-secondary-100 p-2 rounded-full">
-                  <TrendingUp className="h-5 w-5 text-secondary-600" />
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500">Pages Read</div>
-                  <div className="text-xl font-semibold text-gray-900">
-                    {isLoading ? '-' : stats.totalPagesRead.toLocaleString()}
-                  </div>
-                </div>
+            {/* Pages Read & Estimated Time */}
+            <div className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary-100 mb-2">
+                <TrendingUp className="h-5 w-5 text-secondary-600" />
               </div>
+              <div className="text-xs text-gray-500 mb-1">Pages Read</div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">{isLoading ? '-' : stats.totalPagesRead.toLocaleString()}</div>
+              <div className="text-xs text-gray-400">{isLoading ? '' : formatMinutesToHours(stats.totalPagesRead * 1.5)}</div>
             </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="bg-accent-100 p-2 rounded-full">
-                  <BookOpen className="h-5 w-5 text-accent-600" />
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500">Favorite Genre</div>
-                  <div className="text-xl font-semibold text-gray-900">
-                    {isLoading ? '-' : stats.favoriteGenre}
-                  </div>
-                </div>
+            {/* Favorite Genre */}
+            <div
+              className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center text-center shadow-sm cursor-pointer hover:bg-accent-50 transition"
+              onClick={async () => { await fetchGenreDetail(); setShowGenreModal(true); }}
+            >
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent-100 mb-2">
+                <BookOpen className="h-5 w-5 text-accent-600" />
               </div>
+              <div className="text-xs text-gray-500 mb-1">Favorite Genre</div>
+              <div className="text-base font-semibold text-gray-900 truncate max-w-[90px]">{isLoading ? '-' : getShortGenre(stats.favoriteGenre)}</div>
             </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="bg-success-100 p-2 rounded-full">
-                  <Award className="h-5 w-5 text-success-600" />
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500">Current Streak</div>
-                  <div className="text-xl font-semibold text-gray-900">
-                    {isLoading ? '-' : `${stats.readingStreak} days`}
-                  </div>
-                </div>
+            {/* Current Streak */}
+            <div className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-success-100 mb-2">
+                <span className="text-success-600 text-xl">🔥</span>
               </div>
+              <div className="text-xs text-gray-500 mb-1">Current Streak</div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">{isLoading ? '-' : `${stats.readingStreak} days`}</div>
             </div>
           </div>
 
@@ -403,8 +462,79 @@ const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Recent Activities */}
+      <div className="bg-white rounded-xl shadow-md p-6 mt-8">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Activities</h3>
+        {activities.length === 0 ? (
+          <div className="text-gray-500">No activities yet.</div>
+        ) : (
+          <>
+            {activities.slice(0, 5).map(renderActivity)}
+            {activities.length > 5 && (
+              <button
+                className="mt-2 text-primary-600 hover:underline text-sm"
+                onClick={() => setShowAllActivities(true)}
+              >
+                Show All
+              </button>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Modal Show All Activities */}
+      {showAllActivities && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-xl shadow-lg max-w-lg w-full p-6 relative max-h-[80vh] overflow-y-auto">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowAllActivities(false)}
+            >
+              ✕
+            </button>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">All Activities</h3>
+            {activities.length === 0 ? (
+              <div className="text-gray-500">No activities yet.</div>
+            ) : (
+              activities.map(renderActivity)
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal detail genre */}
+      {showGenreModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40" onClick={() => setShowGenreModal(false)}>
+          <div
+            className="bg-white rounded-xl shadow-lg max-w-xs w-full p-6 relative mx-2 max-h-[80vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowGenreModal(false)}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Favorite Genres</h3>
+            {genreDetail.length === 0 ? (
+              <div className="text-gray-500">No completed books with genre yet.</div>
+            ) : (
+              <ul className="space-y-2">
+                {genreDetail.map((g, idx) => (
+                  <li key={g.genre} className="flex items-center justify-between">
+                    <span className="font-medium text-gray-700">{idx + 1}. {g.genre}</span>
+                    <span className="text-xs text-gray-500">{g.count} book{g.count > 1 ? 's' : ''}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Achievements/Badges */}
-      <div className="mt-8">
+      <div className="bg-white rounded-xl shadow-md p-6 mt-8">
         <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center"><Award className="w-6 h-6 mr-2 text-yellow-500" />Achievements</h2>
         <BadgeGrid />
       </div>

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
 import { Book } from '../../../types/supabase';
+import { syncUserXP } from '../../../utils/syncUserXP';
 import BookCompletionModal from './BookCompletionModal';
 
 interface AddReadingModalProps {
@@ -341,6 +342,8 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
         onClose();
       }
       setPagesRead(1); // Reset pagesRead after submit
+      // Sinkronisasi XP otomatis setelah submit
+      await syncUserXP(user.id);
     } catch (error) {
       console.error('Error adding reading session:', error);
       toast.error('Failed to add reading session. Please try again.');

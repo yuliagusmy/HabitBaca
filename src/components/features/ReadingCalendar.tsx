@@ -1,4 +1,5 @@
 import { addYears, endOfYear, format, getDay, getMonth, getYear, startOfWeek, startOfYear, subYears } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -13,7 +14,8 @@ const ReadingCalendar = () => {
   const [readingData, setReadingData] = useState<{[key: string]: number}>({});
   const [isLoading, setIsLoading] = useState(true);
   const gridContainerRef = useRef<HTMLDivElement>(null);
-  const todayCellRef = useRef<HTMLDivElement>(null);
+  const todayCellRef = useRef<HTMLButtonElement>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   // Tahun yang sedang ditampilkan
   const currentYear = getYear(currentDate);
@@ -95,6 +97,19 @@ const ReadingCalendar = () => {
     return 'bg-green-700';
   }, [readingData]);
 
+  // Utility: format menit ke jam/menit
+  function formatMinutesToHours(minutes: number) {
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  }
+
+  // Utility: format tanggal lokal lengkap
+  function formatFullDate(date: Date) {
+    return format(date, 'EEEE, d MMMM yyyy', { locale: localeId });
+  }
+
   // Cell kalender
   const CalendarCell = useCallback(({ day }: { day: Date }) => {
     const dateString = format(day, 'yyyy-MM-dd');
@@ -102,18 +117,21 @@ const ReadingCalendar = () => {
     const isCurrentYear = getYear(day) === currentYear;
     const isToday = format(day, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
     return (
-      <div
+      <button
         key={dateString}
         ref={isToday ? todayCellRef : undefined}
         className={`group w-7 h-7 sm:w-8 sm:h-8 rounded-[3px] flex items-center justify-center ${getCellColor(day)} ${isCurrentYear ? '' : 'opacity-30'} ${isToday ? 'ring-2 ring-blue-400' : ''}`}
         title={`${format(day, 'MMM d')}: ${pagesRead} pages`}
+        onClick={() => setSelectedDate(day)}
+        tabIndex={0}
+        aria-label={`Detail for ${formatFullDate(day)}`}
       >
         <div className="absolute z-10 hidden group-hover:block">
           <div className="bg-gray-800 text-white text-[12px] rounded py-1 px-2 whitespace-nowrap">
             {format(day, 'MMM d')}: {pagesRead} pages
           </div>
         </div>
-      </div>
+      </button>
     );
   }, [readingData, getCellColor, currentYear]);
 
@@ -229,6 +247,34 @@ const ReadingCalendar = () => {
               <span>20+</span>
             </div>
           </div>
+
+      {/* Modal info tanggal */}
+      {selectedDate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40" onClick={() => setSelectedDate(null)}>
+          <div
+            className="bg-white rounded-xl shadow-lg max-w-xs w-full p-6 relative mx-2"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => setSelectedDate(null)}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">{formatFullDate(selectedDate)}</h3>
+            <div className="text-gray-700 mb-1">
+              <b>{readingData[format(selectedDate, 'yyyy-MM-dd')] || 0}</b> pages read
+            </div>
+            <div className="text-gray-500 text-sm mb-1">
+              Estimated time: {formatMinutesToHours((readingData[format(selectedDate, 'yyyy-MM-dd')] || 0) * 1.5)}
+            </div>
+            <div className="text-gray-400 text-xs">
+              {format(selectedDate, 'yyyy-MM-dd')}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

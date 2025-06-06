@@ -7,17 +7,19 @@ import ReadingCalendar from '../components/features/ReadingCalendar';
 import BookCard from '../components/features/books/BookCard';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Book, ReadingSession } from '../types/supabase';
+import { Book } from '../types/supabase';
+import { fetchUserActivities } from '../utils/syncUserXP';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const [currentBooks, setCurrentBooks] = useState<Book[]>([]);
-  const [recentSessions, setRecentSessions] = useState<ReadingSession[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
+      fetchUserActivities(user.id, 5).then(setActivities).catch(console.error);
     }
   }, [user]);
 
@@ -60,7 +62,7 @@ const DashboardPage: React.FC = () => {
 
       if (sessionsError) throw sessionsError;
 
-      setRecentSessions(sessionsData || []);
+      setActivities(sessionsData || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast.error('Failed to load dashboard data');
@@ -75,6 +77,38 @@ const DashboardPage: React.FC = () => {
     if (hour < 12) return "Good Morning";
     if (hour < 18) return "Good Afternoon";
     return "Good Evening";
+  };
+
+  // Helper untuk render aktivitas (sama dengan ProfilePage)
+  const renderActivity = (activity: any, idx: number) => {
+    if (activity.type === 'add_book') {
+      return (
+        <div key={idx} className="flex items-center gap-3 py-2">
+          <BookOpen className="h-5 w-5 text-primary-500" />
+          <span>Added <b>{activity.title}</b> by {activity.author}</span>
+          <span className="ml-auto text-xs text-gray-400">{new Date(activity.time).toLocaleString()}</span>
+        </div>
+      );
+    }
+    if (activity.type === 'complete_book') {
+      return (
+        <div key={idx} className="flex items-center gap-3 py-2">
+          <BookOpen className="h-5 w-5 text-success-500" />
+          <span>Completed <b>{activity.title}</b> by {activity.author} ({activity.totalPages} pages)</span>
+          <span className="ml-auto text-xs text-gray-400">{new Date(activity.time).toLocaleString()}</span>
+        </div>
+      );
+    }
+    if (activity.type === 'reading_session') {
+      return (
+        <div key={idx} className="flex items-center gap-3 py-2">
+          <BookOpen className="h-5 w-5 text-secondary-500" />
+          <span>Read <b>{activity.pagesRead}</b> pages of <b>{activity.bookTitle}</b> by {activity.bookAuthor}</span>
+          <span className="ml-auto text-xs text-gray-400">{new Date(activity.time).toLocaleString()}</span>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -131,57 +165,23 @@ const DashboardPage: React.FC = () => {
         )}
       </div>
 
-      {/* Recent Reading Activity */}
+      {/* Recent Activity */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold text-gray-800">Recent Activity</h2>
-
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
             <div className="loading-spinner"></div>
           </div>
-        ) : recentSessions.length === 0 ? (
+        ) : activities.length === 0 ? (
           <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <p className="text-gray-500">
-              No recent reading sessions. Start tracking your reading!
+              No recent activities. Start tracking your reading!
             </p>
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
             <div className="divide-y divide-gray-200">
-              {recentSessions.map((session, index) => (
-                <div
-                  key={session.id}
-                  className="p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-primary-100 p-2 rounded-full">
-                        <BookOpen className="h-4 w-4 text-primary-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-900">
-                          {session.book?.title || 'Unknown Book'}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {session.book?.author || 'Unknown Author'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-primary-700 font-medium">
-                        {session.pages_read} pages
-                      </span>
-                      <p className="text-xs text-gray-500">
-                        {new Date(session.date).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              {activities.map(renderActivity)}
             </div>
           </div>
         )}

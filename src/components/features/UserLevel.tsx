@@ -130,47 +130,103 @@ const LevelHistory: React.FC<LevelHistoryProps> = ({ currentLevel, currentXP, xp
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute z-10 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden"
-          >
-            <div className="p-4">
-              {/* Previous levels scrollable */}
-              <div className="max-h-32 overflow-y-auto mb-3 pr-1 space-y-1">
-                {previousLevels.map(l => (
-                  <div key={l.level} className="flex justify-between items-center p-2 rounded-lg bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow transition-all">
-                    <span className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="inline-block w-5 h-5 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center font-bold">{l.level}</span>
-                      <span className="truncate max-w-[120px]" title={l.title}>{l.title}</span>
+          <>
+            {/* Desktop dropdown */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="hidden sm:block absolute z-10 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden max-h-[60vh] sm:max-h-[70vh] overflow-y-auto"
+            >
+              <div className="p-4">
+                {/* Previous levels scrollable */}
+                <div className="max-h-32 overflow-y-auto mb-3 pr-1 space-y-1">
+                  {previousLevels.map(l => (
+                    <div key={l.level} className="flex justify-between items-center p-2 rounded-lg bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow transition-all">
+                      <span className="flex items-center gap-2 text-xs text-gray-500">
+                        <span className="inline-block w-5 h-5 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center font-bold">{l.level}</span>
+                        <span className="truncate max-w-[120px]" title={l.title}>{l.title}</span>
+                      </span>
+                      <span className="text-xs text-gray-700 font-mono">{l.currentXP} / {l.xpToNext} XP</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Current level */}
+                {current && (
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-primary-100 to-primary-50 border-2 border-primary-400 shadow font-semibold mb-3">
+                    <span className="flex items-center gap-2 text-primary-800">
+                      <span className="inline-block w-6 h-6 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold shadow">{current.level}</span>
+                      <span className="truncate max-w-[120px]" title={current.title}>{current.title}</span>
                     </span>
-                    <span className="text-xs text-gray-700 font-mono">{l.currentXP} / {l.xpToNext} XP</span>
+                    <span className="text-sm text-primary-700 font-bold font-mono">{current.currentXP} / {current.xpToNext} XP</span>
                   </div>
-                ))}
+                )}
+                {/* Next level */}
+                {next && (
+                  <div className="flex justify-between items-center p-2 rounded-lg bg-gradient-to-r from-white to-orange-50 border border-orange-200 hover:shadow transition-all">
+                    <span className="flex items-center gap-2 text-xs text-orange-500">
+                      <span className="inline-block w-5 h-5 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center font-bold">{next.level}</span>
+                      <span className="truncate max-w-[120px]" title={next.title}>{next.title}</span>
+                    </span>
+                    <span className="text-xs text-orange-600 font-mono">{next.currentXP} / {next.xpToNext} XP</span>
+                  </div>
+                )}
               </div>
-              {/* Current level */}
-              {current && (
-                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-primary-100 to-primary-50 border-2 border-primary-400 shadow font-semibold mb-3">
-                  <span className="flex items-center gap-2 text-primary-800">
-                    <span className="inline-block w-6 h-6 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold shadow">{current.level}</span>
-                    <span className="truncate max-w-[120px]" title={current.title}>{current.title}</span>
-                  </span>
-                  <span className="text-sm text-primary-700 font-bold font-mono">{current.currentXP} / {current.xpToNext} XP</span>
+            </motion.div>
+            {/* Mobile modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="sm:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30"
+              onClick={() => setIsOpen(false)}
+            >
+              <div
+                className="bg-white rounded-xl shadow-2xl border border-gray-200 max-w-xs w-full max-h-[70dvh] overflow-y-auto p-4 relative mx-2"
+                onClick={e => e.stopPropagation()}
+              >
+                <button
+                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+                {/* Previous levels scrollable */}
+                <div className="max-h-32 overflow-y-auto mb-3 pr-1 space-y-1">
+                  {previousLevels.map(l => (
+                    <div key={l.level} className="flex justify-between items-center p-2 rounded-lg bg-gradient-to-r from-gray-50 to-white border border-gray-100 hover:shadow transition-all">
+                      <span className="flex items-center gap-2 text-xs text-gray-500">
+                        <span className="inline-block w-5 h-5 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center font-bold">{l.level}</span>
+                        <span className="truncate max-w-[120px]" title={l.title}>{l.title}</span>
+                      </span>
+                      <span className="text-xs text-gray-700 font-mono">{l.currentXP} / {l.xpToNext} XP</span>
+                    </div>
+                  ))}
                 </div>
-              )}
-              {/* Next level */}
-              {next && (
-                <div className="flex justify-between items-center p-2 rounded-lg bg-gradient-to-r from-white to-orange-50 border border-orange-200 hover:shadow transition-all">
-                  <span className="flex items-center gap-2 text-xs text-orange-500">
-                    <span className="inline-block w-5 h-5 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center font-bold">{next.level}</span>
-                    <span className="truncate max-w-[120px]" title={next.title}>{next.title}</span>
-                  </span>
-                  <span className="text-xs text-orange-600 font-mono">{next.currentXP} / {next.xpToNext} XP</span>
-                </div>
-              )}
-            </div>
-          </motion.div>
+                {/* Current level */}
+                {current && (
+                  <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-primary-100 to-primary-50 border-2 border-primary-400 shadow font-semibold mb-3">
+                    <span className="flex items-center gap-2 text-primary-800">
+                      <span className="inline-block w-6 h-6 rounded-full bg-primary-500 text-white flex items-center justify-center font-bold shadow">{current.level}</span>
+                      <span className="truncate max-w-[120px]" title={current.title}>{current.title}</span>
+                    </span>
+                    <span className="text-sm text-primary-700 font-bold font-mono">{current.currentXP} / {current.xpToNext} XP</span>
+                  </div>
+                )}
+                {/* Next level */}
+                {next && (
+                  <div className="flex justify-between items-center p-2 rounded-lg bg-gradient-to-r from-white to-orange-50 border border-orange-200 hover:shadow transition-all">
+                    <span className="flex items-center gap-2 text-xs text-orange-500">
+                      <span className="inline-block w-5 h-5 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center font-bold">{next.level}</span>
+                      <span className="truncate max-w-[120px]" title={next.title}>{next.title}</span>
+                    </span>
+                    <span className="text-xs text-orange-600 font-mono">{next.currentXP} / {next.xpToNext} XP</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

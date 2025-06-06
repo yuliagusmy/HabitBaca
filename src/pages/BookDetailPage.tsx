@@ -9,10 +9,11 @@ import GenreSelector from '../components/features/books/GenreSelector';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Book, ReadingSession } from '../types/supabase';
+import { syncUserXP } from '../utils/syncUserXP';
 
 const BookDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const navigate = useNavigate();
 
   const [book, setBook] = useState<Book | null>(null);
@@ -188,6 +189,8 @@ const BookDetailPage: React.FC = () => {
       toast.success('Book updated successfully');
       fetchBookData();
       setIsEditing(false);
+      // Sinkronisasi XP otomatis setelah edit buku
+      if (user) await syncUserXP(user.id);
     } catch (error: any) {
       console.error('Error updating book:', error);
       toast.error(error.message || 'Failed to update book');
@@ -225,6 +228,10 @@ const BookDetailPage: React.FC = () => {
       if (deleteError) throw deleteError;
 
       toast.success('Book deleted successfully');
+      // Sinkronisasi XP otomatis setelah hapus buku
+      if (user) await syncUserXP(user.id);
+      if (refreshProfile) await refreshProfile();
+      await new Promise(res => setTimeout(res, 400)); // Delay singkat agar update selesai
       navigate('/books');
     } catch (error) {
       console.error('Error deleting book:', error);
