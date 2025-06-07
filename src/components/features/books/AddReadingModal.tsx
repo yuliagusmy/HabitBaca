@@ -28,15 +28,15 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
 
   const motivationalQuotes = [
     "Every page is a step toward wisdom. Keep going!",
-  "Books are the quietest and most constant of friends.",
-  "Reading is to the mind what exercise is to the body.",
-  "A reader lives a thousand lives before dying.",
-  "Today a reader, tomorrow a leader.",
-  "The more that you read, the more things you will know.",
-  "Reading gives us someplace to go when we have to stay where we are.",
-  "A book is a dream that you hold in your hand.",
-  "Reading is an exercise in empathy.",
-  "The reading of all good books is like conversation with the finest minds.",
+    "Books are the quietest and most constant of friends.",
+    "Reading is to the mind what exercise is to the body.",
+    "A reader lives a thousand lives before dying.",
+    "Today a reader, tomorrow a leader.",
+    "The more that you read, the more things you will know.",
+    "Reading gives us someplace to go when we have to stay where we are.",
+    "A book is a dream that you hold in your hand.",
+    "Reading is an exercise in empathy.",
+    "The reading of all good books is like conversation with the finest minds.",
   "Books don't just go with you, they take you where you've never been.",
   "Read more, learn more, live more.",
   "A book a day keeps reality away.",
@@ -184,15 +184,15 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
     let newCurrentPage: number;
 
     if (trackingMode === 'pages_read') {
-      if (!pagesRead || pagesRead <= 0) {
-        toast.error('Pages read must be at least 1.');
-        return;
-      }
-      const remainingPages = selectedBook.total_pages - selectedBook.current_page;
-      if (pagesRead > remainingPages) {
-        toast.error(`You only have ${remainingPages} pages left in this book.`);
-        return;
-      }
+    if (!pagesRead || pagesRead <= 0) {
+      toast.error('Pages read must be at least 1.');
+      return;
+    }
+    const remainingPages = selectedBook.total_pages - selectedBook.current_page;
+    if (pagesRead > remainingPages) {
+      toast.error(`You only have ${remainingPages} pages left in this book.`);
+      return;
+    }
       actualPagesRead = pagesRead;
       newCurrentPage = selectedBook.current_page + actualPagesRead;
     } else {
@@ -387,111 +387,111 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
           quote={completionQuote}
         />
       )}
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-          onClick={onClose}
-        ></motion.div>
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        onClick={onClose}
+      ></motion.div>
 
-        {/* Modal */}
-        <div className="flex items-center justify-center min-h-screen p-4">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="bg-white rounded-xl shadow-xl max-w-md w-full mx-auto z-10 relative overflow-hidden"
-          >
-            {/* Header with gradient background */}
-            <div className="bg-gradient-to-r from-primary-600 to-secondary-600 p-4 text-white">
-              <div className="flex justify-between items-center">
+      {/* Modal */}
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="bg-white rounded-xl shadow-xl max-w-md w-full mx-auto z-10 relative overflow-hidden"
+        >
+          {/* Header with gradient background */}
+          <div className="bg-gradient-to-r from-primary-600 to-secondary-600 p-4 text-white">
+            <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold flex items-center text-white">
-                  <BookOpen className="mr-2 h-5 w-5" />
-                  Add Reading Session
-                </h2>
+                <BookOpen className="mr-2 h-5 w-5" />
+                Add Reading Session
+              </h2>
+              <button
+                onClick={onClose}
+                className="text-white hover:text-gray-200 focus:outline-none"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="p-6">
+            {isLoading && (
+              <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                <div className="loading-spinner"></div>
+              </div>
+            )}
+
+            {books.length === 0 ? (
+              <div className="text-center py-6">
+                <BookOpen className="h-12 w-12 text-gray-400 mx-auto" />
+                <h3 className="mt-4 text-lg font-medium text-gray-900">No books in progress</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Add a book to your reading list first.
+                </p>
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="text-white hover:text-gray-200 focus:outline-none"
+                  className="mt-6 btn-primary"
                 >
-                  <X className="h-5 w-5" />
+                  Add a book
                 </button>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  {/* Book selection */}
+                  <div>
+                    <label htmlFor="book" className="block text-sm font-medium text-gray-700 mb-1">
+                      Select Book
+                    </label>
+                    <select
+                      id="book"
+                      value={selectedBookId}
+                      onChange={(e) => setSelectedBookId(e.target.value)}
+                      className="input-field"
+                      required
+                    >
+                      <option value="" disabled>Select a book</option>
+                      {books.map((book) => (
+                        <option key={book.id} value={book.id}>
+                          {book.title} by {book.author}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6">
-              {isLoading && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
-                  <div className="loading-spinner"></div>
-                </div>
-              )}
-
-              {books.length === 0 ? (
-                <div className="text-center py-6">
-                  <BookOpen className="h-12 w-12 text-gray-400 mx-auto" />
-                  <h3 className="mt-4 text-lg font-medium text-gray-900">No books in progress</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Add a book to your reading list first.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="mt-6 btn-primary"
-                  >
-                    Add a book
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <div className="space-y-4">
-                    {/* Book selection */}
-                    <div>
-                      <label htmlFor="book" className="block text-sm font-medium text-gray-700 mb-1">
-                        Select Book
-                      </label>
-                      <select
-                        id="book"
-                        value={selectedBookId}
-                        onChange={(e) => setSelectedBookId(e.target.value)}
-                        className="input-field"
-                        required
-                      >
-                        <option value="" disabled>Select a book</option>
-                        {books.map((book) => (
-                          <option key={book.id} value={book.id}>
-                            {book.title} by {book.author}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {selectedBook && (
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <div className="text-sm">
-                          <p className="font-medium">{selectedBook.title}</p>
-                          <p className="text-gray-500">{selectedBook.author}</p>
-                          <p className="mt-1">
-                            <span className="text-sm text-gray-600">Progress: </span>
-                            <span className="font-medium">
-                              {selectedBook.current_page} / {selectedBook.total_pages} pages
-                            </span>
-                            <span className="ml-2 text-xs text-primary-600">
-                              ({Math.round((selectedBook.current_page / selectedBook.total_pages) * 100)}%)
-                            </span>
-                          </p>
-                          <div className="mt-2 xp-bar-container">
-                            <div
-                              className="xp-bar-progress"
-                              style={{ width: `${(selectedBook.current_page / selectedBook.total_pages) * 100}%` }}
-                            ></div>
-                          </div>
+                  {selectedBook && (
+                    <div className="bg-gray-50 p-3 rounded-lg">
+                      <div className="text-sm">
+                        <p className="font-medium">{selectedBook.title}</p>
+                        <p className="text-gray-500">{selectedBook.author}</p>
+                        <p className="mt-1">
+                          <span className="text-sm text-gray-600">Progress: </span>
+                          <span className="font-medium">
+                            {selectedBook.current_page} / {selectedBook.total_pages} pages
+                          </span>
+                          <span className="ml-2 text-xs text-primary-600">
+                            ({Math.round((selectedBook.current_page / selectedBook.total_pages) * 100)}%)
+                          </span>
+                        </p>
+                        <div className="mt-2 xp-bar-container">
+                          <div
+                            className="xp-bar-progress"
+                            style={{ width: `${(selectedBook.current_page / selectedBook.total_pages) * 100}%` }}
+                          ></div>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
 
                     {/* Tracking mode selector */}
                     <div className="flex space-x-4">
@@ -521,26 +521,26 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
 
                     {/* Input field based on tracking mode */}
                     {trackingMode === 'pages_read' ? (
-                      <div>
+                  <div>
                         <label htmlFor="pagesRead" className="block text-sm font-medium text-gray-700 mb-1">
-                          Pages Read Today
-                        </label>
-                        <input
-                          type="number"
+                      Pages Read Today
+                    </label>
+                    <input
+                      type="number"
                           id="pagesRead"
-                          value={pagesRead}
+                      value={pagesRead}
                           onChange={(e) => setPagesRead(parseInt(e.target.value) || 0)}
-                          min="1"
-                          max={selectedBook ? selectedBook.total_pages - selectedBook.current_page : 1000}
+                      min="1"
+                      max={selectedBook ? selectedBook.total_pages - selectedBook.current_page : 1000}
                           className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all duration-200"
                           disabled={isLoading}
-                        />
-                        {selectedBook && (
-                          <p className="mt-1 text-sm text-gray-500">
-                            Pages remaining: {selectedBook.total_pages - selectedBook.current_page}
-                          </p>
-                        )}
-                      </div>
+                    />
+                    {selectedBook && (
+                      <p className="mt-1 text-sm text-gray-500">
+                        Pages remaining: {selectedBook.total_pages - selectedBook.current_page}
+                      </p>
+                    )}
+                  </div>
                     ) : (
                       <div>
                         <label htmlFor="currentPage" className="block text-sm font-medium text-gray-700 mb-1">
@@ -563,38 +563,38 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
                         )}
                       </div>
                     )}
-                  </div>
+                </div>
 
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <button
-                      type="button"
-                      onClick={onClose}
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
                       className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200"
-                      disabled={isLoading}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
                       disabled={isLoading || !selectedBookId}
                       className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                    >
-                      {isLoading ? (
+                  >
+                    {isLoading ? (
                         <span className="flex items-center">
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                           Adding...
                         </span>
-                      ) : (
-                        'Add Session'
-                      )}
-                    </button>
-                  </div>
-                </>
-              )}
-            </form>
-          </motion.div>
-        </div>
+                    ) : (
+                      'Add Session'
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </form>
+        </motion.div>
       </div>
+    </div>
     </>
   );
 };

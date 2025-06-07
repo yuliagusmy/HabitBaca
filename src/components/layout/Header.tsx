@@ -28,7 +28,7 @@ const Header = () => {
           <div className="flex items-center gap-3 sm:hidden mr-2">
             <BookOpen className="w-8 h-8 text-primary-600" />
             <span className="font-extrabold text-primary-600 text-2xl">HabitBaca</span>
-          </div>
+            </div>
           <div className="flex rounded-lg overflow-hidden">
             {/* Page title dihapus sesuai permintaan user */}
           </div>

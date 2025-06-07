@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import * as htmlToImage from 'html-to-image';
-import { BookOpen, Star, X } from 'lucide-react';
+import { BookOpen, Share2, Star, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import Confetti from 'react-confetti';
 import { useAuth } from '../../../context/AuthContext';
@@ -135,8 +135,6 @@ const BookCompletionModal: React.FC<BookCompletionModalProps> = ({ open, onClose
               className="absolute inset-0 bg-gradient-to-br from-primary-100/80 via-white/80 to-yellow-100/80 backdrop-blur-sm"
               onClick={onClose}
             />
-            {/* Confetti */}
-            <Confetti width={window.innerWidth} height={window.innerHeight} numberOfPieces={350} recycle={false} gravity={0.25} />
             {/* Modal */}
             <motion.div
               initial={{ y: 80, opacity: 0 }}
@@ -145,13 +143,6 @@ const BookCompletionModal: React.FC<BookCompletionModalProps> = ({ open, onClose
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               className="relative z-10 bg-white rounded-3xl shadow-2xl px-2 sm:px-6 py-8 flex flex-col items-center border-4 border-primary-200 max-w-sm sm:max-w-md md:max-w-lg w-full overflow-visible"
             >
-              <button
-                onClick={onClose}
-                className="absolute top-5 right-5 text-gray-400 hover:text-gray-600"
-                title="Tutup"
-              >
-                <X className="w-7 h-7" />
-              </button>
               <div className="relative w-full flex flex-col items-center mb-2">
                 <Stars />
                 <div ref={shareRef} className="flex flex-col items-center w-full">
@@ -163,9 +154,9 @@ const BookCompletionModal: React.FC<BookCompletionModalProps> = ({ open, onClose
                   </h2>
                   <div className="text-sm md:text-base text-primary-700 font-semibold mb-1 text-center">You've finished reading a book!</div>
                   <div className="text-xs md:text-sm text-gray-500 mb-4 text-center">Kamu baru saja menyelesaikan membaca buku berikut:</div>
-                  <div className="w-full bg-primary-50 rounded-2xl p-3 md:p-5 mb-4 shadow flex flex-row items-center border border-primary-200 gap-3 md:gap-5 max-w-xs mx-auto">
+                  <div className="w-full bg-primary-50 rounded-2xl p-3 md:p-5 mb-4 shadow flex flex-row items-center border border-primary-200 gap-3 md:gap-8 max-w-xs md:max-w-2xl mx-auto">
                     {/* Cover kiri */}
-                    <div className="w-20 h-28 md:w-28 md:h-40 rounded-xl overflow-hidden shadow border-2 border-primary-300 bg-gray-100 flex items-center justify-center relative flex-shrink-0">
+                    <div className="w-20 h-28 md:w-36 md:h-52 rounded-xl overflow-hidden shadow border-2 border-primary-300 bg-gray-100 flex items-center justify-center relative flex-shrink-0">
                       {book.coverUrl ? (
                         <img src={book.coverUrl} alt={book.title} className="object-cover w-full h-full" />
                       ) : (
@@ -173,7 +164,7 @@ const BookCompletionModal: React.FC<BookCompletionModalProps> = ({ open, onClose
                       )}
                     </div>
                     {/* Detail kanan */}
-                    <div className="flex-1 flex flex-col justify-center items-start w-full">
+                    <div className="flex-1 flex flex-col justify-center items-start w-full md:pl-4">
                       <div className="text-lg md:text-2xl font-bold text-primary-800 mb-1 break-words whitespace-normal leading-snug">
                         {book.title}
                       </div>
@@ -189,7 +180,66 @@ const BookCompletionModal: React.FC<BookCompletionModalProps> = ({ open, onClose
                   </div>
                 </div>
               </div>
+              <div className="text-lg md:text-xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary-700 via-pink-500 to-yellow-400 italic text-center mb-6 max-w-sm mx-auto">
+                “{quote}”
+              </div>
+              {/* Tombol aksi bawah */}
+              <div className="w-full flex flex-col items-center mt-6">
+                <div className="flex gap-4 justify-center">
+                  <button
+                    onClick={() => setShowShareMenu((v) => !v)}
+                    className="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition"
+                    title="Bagikan"
+                  >
+                    <Share2 className="w-6 h-6" />
+                    Bagikan
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition"
+                    title="Tutup"
+                  >
+                    <X className="w-6 h-6" />
+                    Tutup
+                  </button>
+                </div>
+                {/* Menu share */}
+                {showShareMenu && (
+                  <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-white border border-gray-200 rounded-xl shadow-xl p-2 flex flex-col min-w-[180px] z-50 animate-fade-in">
+                    <button
+                      onClick={handleShareWhatsapp}
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-primary-50 rounded-lg text-sm text-primary-700"
+                      disabled={loading}
+                    >
+                      <span>WhatsApp</span>
+                    </button>
+                    <button
+                      onClick={handleShareTwitter}
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-primary-50 rounded-lg text-sm text-blue-500"
+                      disabled={loading}
+                    >
+                      <span>Twitter</span>
+                    </button>
+                    <button
+                      onClick={handleShareInstagram}
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-primary-50 rounded-lg text-sm text-pink-500"
+                      disabled={loading}
+                    >
+                      <span>Instagram</span>
+                    </button>
+                    <button
+                      onClick={handleShareDownload}
+                      className="flex items-center gap-2 px-3 py-2 hover:bg-primary-50 rounded-lg text-sm text-gray-700"
+                      disabled={loading}
+                    >
+                      <span>Download</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </motion.div>
+            {/* Confetti */}
+            <Confetti width={window.innerWidth} height={window.innerHeight} numberOfPieces={350} recycle={false} gravity={0.25} className="z-50" />
           </div>
         )}
       </AnimatePresence>

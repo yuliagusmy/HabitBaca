@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { ALL_BADGES } from '../../../constants/badges';
 
 interface GenreSelectorProps {
   selectedGenres: string[];
@@ -32,7 +33,10 @@ const genreColors: { [key: string]: string } = {
   'Other': 'bg-slate-200 text-slate-900 border border-slate-300'
 };
 
-const genreOptions = Object.keys(genreColors);
+const genreOptions = Array.from(new Set(
+  ALL_BADGES.filter(b => b.badge_type === 'genre')
+    .map(b => b.badge_name.split(' ')[0])
+)).sort();
 
 const GenreSelector: React.FC<GenreSelectorProps> = ({ selectedGenres, onChange, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);

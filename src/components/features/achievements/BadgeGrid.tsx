@@ -7,9 +7,10 @@ interface BadgeGridProps {
   badges?: Badge[];
   allBadges?: Badge[]; // Daftar semua badge (unlocked + locked)
   progressMap?: Record<string, { current: number; target: number }>; // Untuk progress bar
+  highlightIds?: string[]; // Untuk animasi unlock
 }
 
-const BadgeGrid: React.FC<BadgeGridProps> = ({ badges = [], allBadges = [], progressMap = {} }) => {
+const BadgeGrid: React.FC<BadgeGridProps> = ({ badges = [], allBadges = [], progressMap = {}, highlightIds = [] }) => {
   const [filter, setFilter] = useState<string>('all');
 
   // Gabungkan unlocked dan locked badge
@@ -70,14 +71,10 @@ const BadgeGrid: React.FC<BadgeGridProps> = ({ badges = [], allBadges = [], prog
           {filteredBadges.map(badge => {
             const unlocked = unlockedIds.has(badge.id);
             const progress = progressMap[badge.id];
+            const highlight = highlightIds.includes(badge.id);
             return (
-              <div key={badge.id} className={unlocked ? '' : 'opacity-40 grayscale relative'}>
-                <BadgeDisplay badge={badge} locked={!unlocked} />
-                {!unlocked && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="bg-gray-800 text-white text-xs px-2 py-1 rounded">Locked</span>
-                  </div>
-                )}
+              <div key={badge.id} className={highlight ? 'animate-glow-badge' : ''}>
+                <BadgeDisplay badge={badge} locked={!unlocked} progress={progress} />
                 {progress && (
                   <div className="mt-2 w-full">
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">

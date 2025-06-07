@@ -1,0 +1,11 @@
+.animate-glow-badge {
+  animation: glow-badge 1.5s ease-in-out 2;
+  box-shadow: 0 0 16px 4px #facc15, 0 0 32px 8px #fde68a;
+}
+
+@keyframes glow-badge {
+  0% { box-shadow: 0 0 0 0 #facc15, 0 0 0 0 #fde68a; }
+  30% { box-shadow: 0 0 16px 4px #facc15, 0 0 32px 8px #fde68a; }
+  70% { box-shadow: 0 0 24px 8px #facc15, 0 0 48px 16px #fde68a; }
+  100% { box-shadow: 0 0 0 0 #facc15, 0 0 0 0 #fde68a; }
+}
