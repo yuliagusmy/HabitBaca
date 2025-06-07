@@ -1,16 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../../lib/supabase';
-import { useAuth } from '../../../context/AuthContext';
+import { Award } from 'lucide-react';
+import React, { useState } from 'react';
 import { Badge } from '../../../types/supabase';
 import BadgeDisplay from './BadgeDisplay';
-import { Award } from 'lucide-react';
 
-const BadgeGrid: React.FC = () => {
-  const { user } = useAuth();
-  const [badges, setBadges] = useState<Badge[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface BadgeGridProps {
+  badges?: Badge[];
+  allBadges?: Badge[]; // Daftar semua badge (unlocked + locked)
+  progressMap?: Record<string, { current: number; target: number }>; // Untuk progress bar
+}
+
+const BadgeGrid: React.FC<BadgeGridProps> = ({ badges = [], allBadges = [], progressMap = {} }) => {
   const [filter, setFilter] = useState<string>('all');
-  
+
+  // Gabungkan unlocked dan locked badge
+  const unlockedIds = new Set(badges.map(b => b.id));
+  const displayBadges = allBadges.length > 0 ? allBadges : badges;
+
   // Badge type options
   const badgeTypeOptions = [
     { value: 'all', label: 'All Badges' },
@@ -24,38 +29,9 @@ const BadgeGrid: React.FC = () => {
     { value: 'event', label: 'Events' }
   ];
 
-  useEffect(() => {
-    if (user) {
-      fetchBadges();
-    }
-  }, [user, filter]);
-
-  const fetchBadges = async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    try {
-      let query = supabase
-        .from('badges')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('unlocked_at', { ascending: false });
-      
-      // Apply type filter
-      if (filter !== 'all') {
-        query = query.eq('badge_type', filter);
-      }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      setBadges(data || []);
-    } catch (error) {
-      console.error('Error fetching badges:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const filteredBadges = filter === 'all'
+    ? displayBadges
+    : displayBadges.filter(badge => badge.badge_type === filter);
 
   const renderEmptyState = () => (
     <div className="text-center py-16">
@@ -85,19 +61,39 @@ const BadgeGrid: React.FC = () => {
           </button>
         ))}
       </div>
-      
+
       {/* Badges grid */}
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="loading-spinner"></div>
-        </div>
-      ) : badges.length === 0 ? (
+      {filteredBadges.length === 0 ? (
         renderEmptyState()
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {badges.map(badge => (
-            <BadgeDisplay key={badge.id} badge={badge} />
-          ))}
+          {filteredBadges.map(badge => {
+            const unlocked = unlockedIds.has(badge.id);
+            const progress = progressMap[badge.id];
+            return (
+              <div key={badge.id} className={unlocked ? '' : 'opacity-40 grayscale relative'}>
+                <BadgeDisplay badge={badge} locked={!unlocked} />
+                {!unlocked && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="bg-gray-800 text-white text-xs px-2 py-1 rounded">Locked</span>
+                  </div>
+                )}
+                {progress && (
+                  <div className="mt-2 w-full">
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="bg-primary-500 h-2 rounded-full"
+                        style={{ width: `${Math.min(100, (progress.current / progress.target) * 100)}%` }}
+                      />
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 text-center">
+                      {progress.current} / {progress.target}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

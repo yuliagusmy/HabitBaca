@@ -11,7 +11,7 @@ import { Book } from '../types/supabase';
 import { fetchUserActivities } from '../utils/syncUserXP';
 
 const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [currentBooks, setCurrentBooks] = useState<Book[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,44 +71,17 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  // Welcome message based on time of day
-  const getWelcomeMessage = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 18) return "Good Afternoon";
-    return "Good Evening";
+  const getUserDisplayName = () => {
+    if (profile && profile.username) return profile.username;
+    if (user) return user.email?.split('@')[0] || 'Reader';
+    return 'Reader';
   };
 
-  // Helper untuk render aktivitas (sama dengan ProfilePage)
-  const renderActivity = (activity: any, idx: number) => {
-    if (activity.type === 'add_book') {
-      return (
-        <div key={idx} className="flex items-center gap-3 py-2">
-          <BookOpen className="h-5 w-5 text-primary-500" />
-          <span>Added <b>{activity.title}</b> by {activity.author}</span>
-          <span className="ml-auto text-xs text-gray-400">{new Date(activity.time).toLocaleString()}</span>
-        </div>
-      );
-    }
-    if (activity.type === 'complete_book') {
-      return (
-        <div key={idx} className="flex items-center gap-3 py-2">
-          <BookOpen className="h-5 w-5 text-success-500" />
-          <span>Completed <b>{activity.title}</b> by {activity.author} ({activity.totalPages} pages)</span>
-          <span className="ml-auto text-xs text-gray-400">{new Date(activity.time).toLocaleString()}</span>
-        </div>
-      );
-    }
-    if (activity.type === 'reading_session') {
-      return (
-        <div key={idx} className="flex items-center gap-3 py-2">
-          <BookOpen className="h-5 w-5 text-secondary-500" />
-          <span>Read <b>{activity.pagesRead}</b> pages of <b>{activity.bookTitle}</b> by {activity.bookAuthor}</span>
-          <span className="ml-auto text-xs text-gray-400">{new Date(activity.time).toLocaleString()}</span>
-        </div>
-      );
-    }
-    return null;
+  const getWelcomeMessage = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 18) return 'Good Afternoon';
+    return 'Good Evening';
   };
 
   return (
@@ -120,9 +93,12 @@ const DashboardPage: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="mb-8"
       >
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          {getWelcomeMessage()}, Reader!
+        <h1 className="text-xl font-bold text-gray-900 mb-1">
+          {getWelcomeMessage()}
         </h1>
+        <div className="text-3xl font-bold text-primary-700 mb-2">
+          {getUserDisplayName()}
+        </div>
         <p className="text-gray-600">
           Track your reading progress and build your habit.
         </p>
@@ -161,28 +137,6 @@ const DashboardPage: React.FC = () => {
             {currentBooks.map(book => (
               <BookCard key={book.id} book={book} />
             ))}
-          </div>
-        )}
-      </div>
-
-      {/* Recent Activity */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-800">Recent Activity</h2>
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <div className="loading-spinner"></div>
-          </div>
-        ) : activities.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-md p-6 text-center">
-            <p className="text-gray-500">
-              No recent activities. Start tracking your reading!
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <div className="divide-y divide-gray-200">
-              {activities.map(renderActivity)}
-            </div>
           </div>
         )}
       </div>

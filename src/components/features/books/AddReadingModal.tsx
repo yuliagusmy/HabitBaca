@@ -224,7 +224,7 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
           user_id: user.id,
           book_id: selectedBookId,
           pages_read: actualPagesRead,
-          date: format(today)
+          date: formatLocalDate(today)
         });
       if (sessionError) throw sessionError;
       // 2. Update book progress
@@ -257,9 +257,9 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       // Format dates to YYYY-MM-DD for comparison
-      const todayFormatted = format(today);
-      const yesterdayFormatted = format(yesterday);
-      const lastReadingFormatted = lastReadingDate ? format(lastReadingDate) : null;
+      const todayFormatted = formatLocalDate(today);
+      const yesterdayFormatted = formatLocalDate(yesterday);
+      const lastReadingFormatted = lastReadingDate ? formatLocalDate(lastReadingDate) : null;
       // If last reading was yesterday, increment streak
       // If last reading was today already, maintain streak
       // Otherwise reset streak
@@ -279,7 +279,7 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
         .update({
           xp: newXP,
           streak,
-          last_reading_date: format(today),
+          last_reading_date: formatLocalDate(today),
           updated_at: today.toISOString()
         })
         .eq('user_id', user.id);
@@ -307,7 +307,7 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
           author: selectedBook.author,
           totalPages: selectedBook.total_pages,
           genre: selectedBook.genre,
-          finishedAt: format(today),
+          finishedAt: formatLocalDate(today),
         });
         setCompletionQuote(chosenQuote);
         setShowBookComplete(true);
@@ -344,6 +344,8 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
       setPagesRead(1); // Reset pagesRead after submit
       // Sinkronisasi XP otomatis setelah submit
       await syncUserXP(user.id);
+      // Notifikasi XP selalu muncul
+      toast.success(`Kamu mendapatkan ${additionalXP} XP!`);
     } catch (error) {
       console.error('Error adding reading session:', error);
       toast.error('Failed to add reading session. Please try again.');
@@ -352,9 +354,12 @@ const AddReadingModal: React.FC<AddReadingModalProps> = ({ isOpen, onClose }) =>
     }
   };
 
-  // Helper function to format date to YYYY-MM-DD
-  function format(date: Date): string {
-    return date.toISOString().split('T')[0];
+  // Helper function to format date to YYYY-MM-DD (local time)
+  function formatLocalDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   // Simplified level calculation

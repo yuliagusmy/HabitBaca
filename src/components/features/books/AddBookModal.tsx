@@ -106,40 +106,23 @@ const AddBookModal: React.FC<AddBookModalProps> = ({ isOpen, onClose, onBookAdde
 
       if (error) throw error;
 
-      // Tambah XP dan reading session jika status completed
+      // Tambah XP jika status completed, tapi JANGAN buat reading session otomatis
       if (formData.status === 'completed' && profile) {
         const bonusXP = 50;
         const totalXP = formData.total_pages + bonusXP;
         const newXP = (profile.xp || 0) + totalXP;
 
-        // 1. Update XP
+        // Update XP dan total_pages_read (jika ingin tetap update total halaman)
+        const today = new Date().toISOString().split('T')[0];
         const { error: xpError } = await supabase
           .from('user_profiles')
-          .update({ xp: newXP })
-          .eq('user_id', user.id);
-        if (xpError) throw xpError;
-
-        // 2. Add reading session
-        const today = new Date().toISOString().split('T')[0];
-        const { error: sessionError } = await supabase
-          .from('reading_sessions')
-          .insert({
-            user_id: user.id,
-            book_id: data.id,
-            pages_read: formData.total_pages,
-            date: today
-          });
-        if (sessionError) throw sessionError;
-
-        // 3. Update total pages read in profile
-        const { error: pagesError } = await supabase
-          .from('user_profiles')
           .update({
+            xp: newXP,
             total_pages_read: (profile.total_pages_read || 0) + formData.total_pages,
             last_reading_date: today
           })
           .eq('user_id', user.id);
-        if (pagesError) throw pagesError;
+        if (xpError) throw xpError;
 
         toast.success(`Book added! 🎉 Kamu dapat ${formData.total_pages} XP + ${bonusXP} bonus XP!`);
       } else {

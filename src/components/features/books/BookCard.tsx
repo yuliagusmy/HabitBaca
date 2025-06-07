@@ -114,57 +114,57 @@ const BookCard: React.FC<BookCardProps> = ({ book, size = 'large' }) => {
           {/* Book details */}
           {size === 'large' && (
             <div className={`flex flex-col flex-1 ${padding}`}>
-              <div className="flex-1">
-                <div className="flex justify-between items-start mb-1">
+            <div className="flex-1">
+              <div className="flex justify-between items-start mb-1">
                   <h3 className={`font-medium text-gray-900 line-clamp-1 ${titleClass}`}>{book.title}</h3>
-                  <StatusIcon />
-                </div>
+                <StatusIcon />
+              </div>
                 <p className={`text-gray-500 mb-2 ${authorClass}`}>{book.author}</p>
                 <div className={`flex flex-wrap gap-1 mb-2`}>
-                  {Array.isArray(book.genre)
-                    ? book.genre.map((g) => (
-                        <span
-                          key={g}
-                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-1 mb-1 ${genreColors[g] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}
-                        >
-                          <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
-                          {g}
-                        </span>
-                      ))
-                    : book.genre && (
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-1 mb-1 ${genreColors[book.genre] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}>
-                          <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
-                          {book.genre}
-                        </span>
-                      )}
-                  {getStatusBadge()}
+                {Array.isArray(book.genre)
+                  ? book.genre.map((g) => (
+                      <span
+                        key={g}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-1 mb-1 ${genreColors[g] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}
+                      >
+                        <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
+                        {g}
+                      </span>
+                    ))
+                  : book.genre && (
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold mr-1 mb-1 ${genreColors[book.genre] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}>
+                        <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
+                        {book.genre}
+                      </span>
+                    )}
+                {getStatusBadge()}
+              </div>
+            </div>
+            {/* Progress bar for books being read */}
+            {book.status === 'reading' && (
+              <div className="pt-2 mt-auto">
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>{book.current_page} of {book.total_pages} pages</span>
+                  <span>{progress}%</span>
+                </div>
+                <div className="xp-bar-container">
+                  <div
+                    className="xp-bar-progress"
+                    style={{ width: `${progress}%` }}
+                  ></div>
                 </div>
               </div>
-              {/* Progress bar for books being read */}
-              {book.status === 'reading' && (
-                <div className="pt-2 mt-auto">
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
-                    <span>{book.current_page} of {book.total_pages} pages</span>
-                    <span>{progress}%</span>
-                  </div>
-                  <div className="xp-bar-container">
-                    <div
-                      className="xp-bar-progress"
-                      style={{ width: `${progress}%` }}
-                    ></div>
-                  </div>
+            )}
+            {/* Completion indicator for completed books */}
+            {book.status === 'completed' && (
+              <div className="pt-2 mt-auto">
+                <div className="flex items-center text-success-600">
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  <span className="text-sm">Completed {book.total_pages} pages</span>
                 </div>
-              )}
-              {/* Completion indicator for completed books */}
-              {book.status === 'completed' && (
-                <div className="pt-2 mt-auto">
-                  <div className="flex items-center text-success-600">
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    <span className="text-sm">Completed {book.total_pages} pages</span>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
           )}
           {size === 'medium' && (
             <div className="flex flex-col flex-1 p-2">

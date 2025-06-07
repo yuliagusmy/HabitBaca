@@ -5,6 +5,7 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 import Layout from './components/layout/Layout';
 import LoadingScreen from './components/ui/LoadingScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import AchievementsPage from './pages/AchievementsPage';
 import BookDetailPage from './pages/BookDetailPage';
 import BooksPage from './pages/BooksPage';
 import DashboardPage from './pages/DashboardPage';
@@ -57,6 +58,7 @@ function App() {
             <Route path="books/:id" element={<BookDetailPage />} />
             <Route path="stats" element={<StatsPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="achievements" element={<AchievementsPage />} />
           </Route>
 
           <Route path="*" element={<NotFoundPage />} />

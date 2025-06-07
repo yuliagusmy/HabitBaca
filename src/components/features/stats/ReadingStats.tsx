@@ -67,20 +67,28 @@ const ReadingStats: React.FC = () => {
 
       if (monthlyError) throw monthlyError;
 
+      // Helper: format date ke YYYY-MM-DD lokal
+      function toLocalDateString(date: Date): string {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
       // Prepare chart data
       const dateMap: {[key: string]: number} = {};
       monthlyReadingSessions?.forEach(session => {
-        const date = session.date;
-        if (dateMap[date]) {
-          dateMap[date] += session.pages_read;
+        const localDate = toLocalDateString(new Date(session.date));
+        if (dateMap[localDate]) {
+          dateMap[localDate] += session.pages_read;
         } else {
-          dateMap[date] = session.pages_read;
+          dateMap[localDate] = session.pages_read;
         }
       });
 
       const labels = days.map(day => format(day, 'd'));
       const data = days.map(day => {
-        const dateStr = format(day, 'yyyy-MM-dd');
+        const dateStr = toLocalDateString(day);
         return dateMap[dateStr] || 0;
       });
 

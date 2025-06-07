@@ -167,8 +167,8 @@ const ProfilePage: React.FC = () => {
               genreCounts[g] = (genreCounts[g] || 0) + 1;
             });
           } else {
-            genreCounts[book.genre] = (genreCounts[book.genre] || 0) + 1;
-          }
+          genreCounts[book.genre] = (genreCounts[book.genre] || 0) + 1;
+        }
         }
       });
 
@@ -369,7 +369,7 @@ const ProfilePage: React.FC = () => {
             {/* Books Read */}
             <div className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary-100 mb-2">
-                <BookText className="h-5 w-5 text-primary-600" />
+                  <BookText className="h-5 w-5 text-primary-600" />
               </div>
               <div className="text-xs text-gray-500 mb-1">Books Read</div>
               <div className="text-2xl font-bold text-gray-900 mb-1">{isLoading ? '-' : stats.totalBooksRead}</div>
@@ -377,7 +377,7 @@ const ProfilePage: React.FC = () => {
             {/* Pages Read & Estimated Time */}
             <div className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center text-center shadow-sm">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-secondary-100 mb-2">
-                <TrendingUp className="h-5 w-5 text-secondary-600" />
+                  <TrendingUp className="h-5 w-5 text-secondary-600" />
               </div>
               <div className="text-xs text-gray-500 mb-1">Pages Read</div>
               <div className="text-2xl font-bold text-gray-900 mb-1">{isLoading ? '-' : stats.totalPagesRead.toLocaleString()}</div>
@@ -389,7 +389,7 @@ const ProfilePage: React.FC = () => {
               onClick={async () => { await fetchGenreDetail(); setShowGenreModal(true); }}
             >
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent-100 mb-2">
-                <BookOpen className="h-5 w-5 text-accent-600" />
+                  <BookOpen className="h-5 w-5 text-accent-600" />
               </div>
               <div className="text-xs text-gray-500 mb-1">Favorite Genre</div>
               <div className="text-base font-semibold text-gray-900 truncate max-w-[90px]">{isLoading ? '-' : getShortGenre(stats.favoriteGenre)}</div>

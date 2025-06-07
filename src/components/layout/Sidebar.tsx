@@ -1,9 +1,10 @@
 import {
-  BarChart2,
-  BookOpen,
-  LayoutDashboard,
-  LogOut,
-  User
+    Award,
+    BarChart2,
+    BookOpen,
+    LayoutDashboard,
+    LogOut,
+    User
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -86,6 +87,20 @@ const Sidebar = () => {
         >
           <User className="mr-3 h-5 w-5" />
           Profile
+        </NavLink>
+
+        <NavLink
+          to="/achievements"
+          className={({ isActive }) =>
+            `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+              isActive
+                ? 'bg-primary-50 text-primary-700'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`
+          }
+        >
+          <Award className="mr-3 h-5 w-5" />
+          Achievements
         </NavLink>
       </nav>
 
