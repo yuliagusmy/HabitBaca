@@ -6,6 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import AddReadingModal from '../components/features/books/AddReadingModal';
 import BookCompletionModal from '../components/features/books/BookCompletionModal';
 import GenreSelector from '../components/features/books/GenreSelector';
+import { genreColors } from '../constants/genreColors';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Book, ReadingSession } from '../types/supabase';
@@ -580,14 +581,14 @@ const BookDetailPage: React.FC = () => {
                   <div className="flex flex-wrap items-center gap-1 mb-2">
                     {Array.isArray(book.genre)
                       ? book.genre.map((g) => (
-                          <span key={g} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 mr-1 mb-1">
-                            <BookOpen className="h-3 w-3 mr-1 text-primary-400" />
+                          <span key={g} className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${genreColors[g] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}>
+                            <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
                             {g}
                           </span>
                         ))
                       : book.genre && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary-100 text-primary-700 mr-1 mb-1">
-                            <BookOpen className="h-3 w-3 mr-1 text-primary-400" />
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${genreColors[book.genre] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}>
+                            <BookOpen className="h-3 w-3 mr-1 text-gray-400" />
                             {book.genre}
                           </span>
                         )}

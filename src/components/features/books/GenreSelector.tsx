@@ -2,36 +2,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { ALL_BADGES } from '../../../constants/badges';
+import { genreColors } from '../../../constants/genreColors';
 
 interface GenreSelectorProps {
   selectedGenres: string[];
   onChange: (genres: string[]) => void;
   className?: string;
 }
-
-const genreColors: { [key: string]: string } = {
-  'Fantasy': 'bg-purple-200 text-purple-900 border border-purple-300',
-  'Science Fiction': 'bg-blue-200 text-blue-900 border border-blue-300',
-  'Mystery': 'bg-gray-200 text-gray-900 border border-gray-300',
-  'Thriller': 'bg-red-200 text-red-900 border border-red-300',
-  'Romance': 'bg-pink-200 text-pink-900 border border-pink-300',
-  'Historical Fiction': 'bg-yellow-200 text-yellow-900 border border-yellow-300',
-  'Non-fiction': 'bg-green-200 text-green-900 border border-green-300',
-  'Biography': 'bg-indigo-200 text-indigo-900 border border-indigo-300',
-  'Self-help': 'bg-teal-200 text-teal-900 border border-teal-300',
-  'Business': 'bg-orange-200 text-orange-900 border border-orange-300',
-  'Philosophy': 'bg-cyan-200 text-cyan-900 border border-cyan-300',
-  'Science': 'bg-emerald-200 text-emerald-900 border border-emerald-300',
-  'Poetry': 'bg-rose-200 text-rose-900 border border-rose-300',
-  'Memoir': 'bg-violet-200 text-violet-900 border border-violet-300',
-  'Travel': 'bg-sky-200 text-sky-900 border border-sky-300',
-  'Religion': 'bg-amber-200 text-amber-900 border border-amber-300',
-  'History': 'bg-stone-200 text-stone-900 border border-stone-300',
-  'Psychology': 'bg-fuchsia-200 text-fuchsia-900 border border-fuchsia-300',
-  'Cooking': 'bg-lime-200 text-lime-900 border border-lime-300',
-  'Art': 'bg-rose-100 text-rose-900 border border-rose-200',
-  'Other': 'bg-slate-200 text-slate-900 border border-slate-300'
-};
 
 const genreOptions = Array.from(new Set(
   ALL_BADGES.filter(b => b.badge_type === 'genre')
@@ -80,7 +57,7 @@ const GenreSelector: React.FC<GenreSelectorProps> = ({ selectedGenres, onChange,
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${genreColors[genre]}`}
+                className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${genreColors[genre] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}
               >
                 {genre}
                 <button

@@ -3,6 +3,7 @@ import * as htmlToImage from 'html-to-image';
 import { BookOpen, Share2, Star, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import Confetti from 'react-confetti';
+import { genreColors } from '../../../constants/genreColors';
 import { useAuth } from '../../../context/AuthContext';
 import { supabase } from '../../../lib/supabase';
 import { Badge } from '../../../types/supabase';
@@ -173,7 +174,20 @@ const BookCompletionModal: React.FC<BookCompletionModalProps> = ({ open, onClose
                       </div>
                       <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-700 mb-2">
                         <span>📄 <b>{book.totalPages}</b> pages</span>
-                        <span>🏷️ <b>{Array.isArray(book.genre) ? book.genre.join(', ') : book.genre}</b></span>
+                        {Array.isArray(book.genre) ? (
+                          book.genre.map((g) => (
+                            <span
+                              key={g}
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${genreColors[g] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}
+                            >
+                              🏷️ {g}
+                            </span>
+                          ))
+                        ) : book.genre && (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${genreColors[book.genre] || 'bg-gray-200 text-gray-900 border border-gray-300'}`}>
+                            🏷️ {book.genre}
+                          </span>
+                        )}
                         <span>📅 <b>{book.finishedAt}</b></span>
                       </div>
                     </div>
